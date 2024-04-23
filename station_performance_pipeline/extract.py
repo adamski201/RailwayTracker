@@ -93,19 +93,3 @@ def train_station_cancellation_data(train_services: list[dict]) -> list[dict]:
 
     else:
         return []
-
-
-if __name__ == "__main__":
-
-    load_dotenv()
-
-    paddington_train_services_list = get_station_train_services_data("PAD")
-
-    paddington_arrivals = train_station_arrival_data(
-        paddington_train_services_list)
-
-    paddington_cancellations = train_station_cancellation_data(
-        paddington_train_services_list)
-
-    print(len(paddington_arrivals))
-    print(len(paddington_cancellations))
