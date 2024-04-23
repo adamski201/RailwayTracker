@@ -15,7 +15,7 @@ def get_station_train_services_data(station_crs) -> list[dict]:
 
     now = datetime.now()
     response = requests.get(
-        F"https://api.rtt.io/api/v1/json/search/{station_crs}/{now.strftime('%Y')}/{now.strftime('%m')}/{now.strftime('%d')}", auth=HTTPBasicAuth(ENV["REALTIME_API_USER"], ENV["REALTIME_API_PASS"]))
+        f"https://api.rtt.io/api/v1/json/search/{station_crs}/{now.strftime('%Y')}/{now.strftime('%m')}/{now.strftime('%d')}", auth=HTTPBasicAuth(ENV["REALTIME_API_USER"], ENV["REALTIME_API_PASS"]))
 
     if response.status_code != 200:
         raise requests.RequestException(
