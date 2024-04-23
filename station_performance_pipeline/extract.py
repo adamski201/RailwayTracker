@@ -31,7 +31,7 @@ if __name__ == "__main__":
             cancelled_service["service_id"] = service["serviceUid"]
             cancelled_service["cancellation_code"] = service["locationDetail"]["cancelReasonCode"]
             cancelled_service["cancel_reason"] = service["locationDetail"]["cancelReasonLongText"]
-            # maybe don't need to search for this
+            # maybe don't need to search for this every time
             cancelled_service["station_crs"] = service["locationDetail"]["crs"]
 
             cancelled_services.append(cancelled_service)
@@ -40,9 +40,16 @@ if __name__ == "__main__":
 
             arrived_service = {}
             arrived_service["service_id"] = service["serviceUid"]
-            arrived_service["scheduled_arrival"] = service["locationDetail"]["gbttBookedArrival"]
-            arrived_service["actual_arrival"] = service["locationDetail"]["realtimeArrival"]
-            arrived_service["scheduled_departure"] = service["locationDetail"]["gbttBookedDeparture"]
-            arrived_service["actual_departure"] = service["locationDetail"]["realtimeArrival"]
+            if "gbttBookedArrival" in service["locationDetail"].keys():
+                arrived_service["scheduled_arrival"] = service["locationDetail"]["gbttBookedArrival"]
+                arrived_service["actual_arrival"] = service["locationDetail"]["realtimeArrival"]
+            if "gbttBookedDeparture" in service["locationDetail"].keys():
+                arrived_service["scheduled_departure"] = service["locationDetail"]["gbttBookedDeparture"]
+                arrived_service["actual_departure"] = service["locationDetail"]["realtimeDeparture"]
+            # maybe don't need to search for this every time
+            arrived_service["station_crs"] = service["locationDetail"]["crs"]
+
+            arrived_services.append(arrived_service)
 
     print(cancelled_services)
+    print(len(arrived_services))
