@@ -1,42 +1,29 @@
 from os import environ as ENV
+from datetime import datetime
 
 import requests
 from requests.auth import HTTPBasicAuth
 from dotenv import load_dotenv
 
 
-if __name__ == "__main__":
+def train_station_arrival_data(station_crs: str) -> list[dict]:
+    '''This function accepts the crs code of a station and returns a list of dictionaries.
+    Each dictionary represents a train that arrived at the station on this day.
+    The dictionary has the keys related to the expected and actual times of arrival and departure.'''
 
-    load_dotenv()
-
+    now = datetime.now()
     response = requests.get(
-        "https://api.rtt.io/api/v1/json/search/PAD/2024/04/23", auth=HTTPBasicAuth(ENV["REALTIME_API_USER"], ENV["REALTIME_API_PASS"]))
+        F"https://api.rtt.io/api/v1/json/search/{station_crs}/{now.strftime('%Y')}/{now.strftime('%m')}/{now.strftime('%d')}", auth=HTTPBasicAuth(ENV["REALTIME_API_USER"], ENV["REALTIME_API_PASS"]))
 
     todays_station_data = response.json()
 
-    # print(todays_station_data["location"])
-
+    # Data on all of the instances of services running stopping at teh station
     services_data = todays_station_data["services"]
 
-    counter = 0
-
-    # keys: service_id, cancellation_code, cancelReason, and station_crs
-    cancelled_services = []
-    # keys: service_id, scheduled_arrival, actual_arrival, scheduled_departure, actual_departure station_crs
     arrived_services = []
     for service in services_data:
 
-        if "cancelReasonCode" in service["locationDetail"].keys():
-            cancelled_service = {}
-            cancelled_service["service_id"] = service["serviceUid"]
-            cancelled_service["cancellation_code"] = service["locationDetail"]["cancelReasonCode"]
-            cancelled_service["cancel_reason"] = service["locationDetail"]["cancelReasonLongText"]
-            # maybe don't need to search for this every time
-            cancelled_service["station_crs"] = service["locationDetail"]["crs"]
-
-            cancelled_services.append(cancelled_service)
-
-        else:
+        if "cancelReasonCode" not in service["locationDetail"].keys():
 
             arrived_service = {}
             arrived_service["service_id"] = service["serviceUid"]
@@ -48,8 +35,55 @@ if __name__ == "__main__":
                 arrived_service["actual_departure"] = service["locationDetail"]["realtimeDeparture"]
             # maybe don't need to search for this every time
             arrived_service["station_crs"] = service["locationDetail"]["crs"]
+            arrived_service["station_name"] = service["locationDetail"]["description"]
+            arrived_service["atocCode"] = service["atocCode"]
+            arrived_service["atocName"] = service["atocName"]
 
             arrived_services.append(arrived_service)
 
-    print(cancelled_services)
-    print(len(arrived_services))
+    return arrived_services
+
+
+def train_station_cancellation_data(station_crs: str) -> list[dict]:
+    '''This function accepts the crs code of a station and returns a list of dictionaries.
+    Each dictionary represents a train that  had intended to arrive that day, but was cancelled. 
+    The dictionary has the keys related to the reasons of cancellation.'''
+
+    now = datetime.now()
+    response = requests.get(
+        F"https://api.rtt.io/api/v1/json/search/{station_crs}/{now.strftime('%Y')}/{now.strftime('%m')}/{now.strftime('%d')}", auth=HTTPBasicAuth(ENV["REALTIME_API_USER"], ENV["REALTIME_API_PASS"]))
+
+    todays_station_data = response.json()
+
+    # Data on all of the instances of services running stopping at teh station
+    services_data = todays_station_data["services"]
+
+    cancelled_services = []
+    for service in services_data:
+
+        if "cancelReasonCode" in service["locationDetail"].keys():
+            cancelled_service = {}
+            cancelled_service["service_id"] = service["serviceUid"]
+            cancelled_service["cancellation_code"] = service["locationDetail"]["cancelReasonCode"]
+            cancelled_service["cancel_reason"] = service["locationDetail"]["cancelReasonLongText"]
+            # maybe don't need to search for this every time
+            cancelled_service["station_crs"] = service["locationDetail"]["crs"]
+            cancelled_service["station_name"] = service["locationDetail"]["description"]
+            cancelled_service["atocCode"] = service["atocCode"]
+            cancelled_service["atocName"] = service["atocName"]
+
+            cancelled_services.append(cancelled_service)
+
+    return cancelled_services
+
+
+if __name__ == "__main__":
+
+    load_dotenv()
+
+    arrivals_list = train_station_arrival_data("PAD")
+
+    cancellations_list = train_station_cancellation_data("PAD")
+
+    print(len(arrivals_list))
+    print(len(cancellations_list))
