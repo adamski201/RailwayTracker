@@ -6,11 +6,15 @@ Brief description of project.
 
 ## Folder & Files Structure
 
-- dashboard/: Contains the Streamlit dashboard code.
-- images/: Contains images used in the README across the project.
-- terraform/: Contains the Terraform files for deploying the cloud services.
-- schema/: Contains the SQL schema for the database.
-- .github/workflows/: Contains the GitHub Actions workflow for CI/CD.
+`.github/`: Contains the GitHub Actions workflow files for CI/CD.
+
+`dashboard/`: Contains the Streamlit dashboard code.
+
+`images/`: Contains images used in the README [across the project].
+
+`terraform/`: Contains the Terraform files for deploying the cloud services.
+
+`schema/:` Contains the SQL schema for the database.
 
 ## Pre-requisites
 
