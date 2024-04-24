@@ -5,7 +5,7 @@ on:
     branches:
       - main
 jobs:
-  test_and_lint:
+  test:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
