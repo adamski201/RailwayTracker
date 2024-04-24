@@ -31,4 +31,17 @@ jobs:
           pip install -r station_performance_pipeline/requirements.txt
           pylint station_performance_pipeline/*.py --ignore-patterns=test_ --fail-under=8.5
 
+            - name: Get changes to incidents
+        id: changed-incidents
+        uses: tj-actions/changed-files@v44
+        with:
+          files: |
+             incidents/**.py
+
+      - name: Run incidents linting if files changed
+        if: steps.changed-incidents.outputs.any_changed == 'true'
+        run: |
+          pip install -r incidents/requirements.txt
+          pylint incidents/*.py --ignore-patterns=test_ --fail-under=8.5
+
 
