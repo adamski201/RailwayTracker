@@ -1,9 +1,10 @@
+"""Extract script for the station_performance pipeline."""
+
 from os import environ as ENV
 from datetime import datetime
 
 import requests
 from requests.auth import HTTPBasicAuth
-from dotenv import load_dotenv
 
 
 def get_station_train_services_data(station_crs) -> list[dict]:
@@ -15,23 +16,25 @@ def get_station_train_services_data(station_crs) -> list[dict]:
 
     now = datetime.now()
     response = requests.get(
-        f"https://api.rtt.io/api/v1/json/search/{station_crs}/{now.strftime('%Y')}/{now.strftime('%m')}/{now.strftime('%d')}", auth=HTTPBasicAuth(ENV["REALTIME_API_USER"], ENV["REALTIME_API_PASS"]))
+        f"https://api.rtt.io/api/v1/json/search/{station_crs}/{now.strftime('%Y')}/{now.strftime('%m')}/{now.strftime('%d')}",
+        auth=HTTPBasicAuth(ENV["REALTIME_API_USER"], ENV["REALTIME_API_PASS"]))
 
     if response.status_code != 200:
         raise requests.RequestException(
             f"Failed to fetch data: {response.text}")
 
-    else:
-        todays_station_data = response.json()
-        return todays_station_data["services"]
+    todays_station_data = response.json()
+    return todays_station_data["services"]
 
 
 def train_station_arrival_data(train_services: list[dict]) -> list[dict]:
-    """This function accepts a list of dictionaries corresponding to the trains that arrived, 
-    or were expected to arrive, at a specific station and returns another list of dictionaries.
-    Each dictionary represents a train that arrived at the station on this day, extracting only relevant data
-    from the inputted list.
-    The dictionary has the keys related to the expected and actual times of arrival and departure."""
+    """This function accepts a list of dictionaries corresponding to the trains that 
+    arrived, or were expected to arrive, at a specific station and returns another
+    list of dictionaries.
+    Each dictionary represents a train that arrived at the station on this day, 
+    extracting only relevant data from the inputted list.
+    The dictionary has the keys related to the expected and actual times of arrival
+    and departure."""
 
     if len(train_services) != 0:
         station_crs = train_services[0]["locationDetail"]["crs"]
@@ -59,8 +62,7 @@ def train_station_arrival_data(train_services: list[dict]) -> list[dict]:
 
         return arrived_services
 
-    else:
-        return []
+    return []
 
 
 def train_station_cancellation_data(train_services: list[dict]) -> list[dict]:
@@ -91,5 +93,4 @@ def train_station_cancellation_data(train_services: list[dict]) -> list[dict]:
 
         return cancelled_services
 
-    else:
-        return []
+    return []
