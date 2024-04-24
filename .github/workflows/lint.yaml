@@ -28,6 +28,7 @@ jobs:
       - name: Run station_performance_pipeline linting if files changed
         if: steps.changed-station_performance_pipeline.outputs.any_changed == 'true'
         run: |
+          pip install -r station_performance_pipeline/requirements.txt
           pylint station_performance_pipeline/*.py --ignore-patterns=test_ --fail-under=8.5
 
 
