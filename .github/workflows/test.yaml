@@ -1,0 +1,23 @@
+name: run-tests
+run-name: Testing for ${{ github.actor }}'s changes.
+on:
+  pull_request:
+    branches:
+      - main
+jobs:
+  test_and_lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+
+      - name: Install Dependencies from All Requirements Files
+        run: |
+          find . -name 'requirements.txt' -exec pip install --no-cache-dir -r {} \;
+          pip install pytest
+
+      - name: Run Pytest
+        run: pytest
