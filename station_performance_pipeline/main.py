@@ -1,8 +1,3 @@
-from os import environ as ENV
-from datetime import datetime
-
-import requests
-from requests.auth import HTTPBasicAuth
 from dotenv import load_dotenv
 
 from extract import get_station_train_services_data, train_station_arrival_data, train_station_cancellation_data
@@ -18,6 +13,3 @@ if __name__ == "__main__":
 
     paddington_cancellations = train_station_cancellation_data(
         paddington_train_services_list)
-
-    print(len(paddington_arrivals))
-    print(len(paddington_cancellations))

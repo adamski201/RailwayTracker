@@ -3,7 +3,6 @@ from datetime import datetime
 
 import requests
 from requests.auth import HTTPBasicAuth
-from dotenv import load_dotenv
 
 
 def get_station_train_services_data(station_crs) -> list[dict]:
