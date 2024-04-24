@@ -75,7 +75,8 @@ terraform destroy
 
 ![ERD diagram](https://drawsql.app/teams/isaac-11/diagrams/railway-tracker-3)
 
-<img width="927" alt="Screenshot 2024-04-24 at 10 42 59" src="https://github.com/adamski201/Railway-Tracker/assets/84942651/3c3c4002-312a-4a3d-8d2a-b58113188071">
+<img width="1108" alt="Screenshot 2024-04-24 at 16 53 04" src="https://github.com/adamski201/Railway-Tracker/assets/84942651/c7f4da53-212b-44ca-b239-f51d9109b8b6">
+
 
 
 ### Cloud architecture diagram
