@@ -1,7 +1,9 @@
 from entities import Arrival, Cancellation, Operator, Station, Service, CancellationType
 
+from datetime import date, datetime
 
-def transform_train_services_data(train_services: list[dict]):
+
+def transform_train_services_data(train_services: list[dict], date: date):
     """This function accepts a list of dictionaries corresponding to the trains that
     arrived, or were expected to arrive, at a specific station and returns another
     list of dictionaries.
@@ -40,9 +42,13 @@ def transform_train_services_data(train_services: list[dict]):
                 )
 
                 if "gbttBookedArrival" in service["locationDetail"]:
-                    scheduled_time = service["locationDetail"]["gbttBookedArrival"]
+                    scheduled_time = get_datetime_from_time_str(
+                        date, service["locationDetail"]["gbttBookedArrival"]
+                    )
                 else:
-                    scheduled_time = service["locationDetail"]["gbttBookedDeparture"]
+                    scheduled_time = get_datetime_from_time_str(
+                        date, service["locationDetail"]["gbttBookedDeparture"]
+                    )
 
                 cancellations.append(
                     Cancellation(
@@ -57,11 +63,19 @@ def transform_train_services_data(train_services: list[dict]):
                     "gbttBookedArrival" in service["locationDetail"]
                     and "realtimeArrival" in service["locationDetail"]
                 ):
-                    scheduled_time = service["locationDetail"]["gbttBookedArrival"]
-                    actual_time = service["locationDetail"]["realtimeArrival"]
+                    scheduled_time = get_datetime_from_time_str(
+                        date, service["locationDetail"]["gbttBookedArrival"]
+                    )
+                    actual_time = get_datetime_from_time_str(
+                        date, service["locationDetail"]["realtimeArrival"]
+                    )
                 else:
-                    scheduled_time = service["locationDetail"]["gbttBookedDeparture"]
-                    actual_time = service["locationDetail"]["realtimeDeparture"]
+                    scheduled_time = get_datetime_from_time_str(
+                        date, service["locationDetail"]["gbttBookedDeparture"]
+                    )
+                    actual_time = get_datetime_from_time_str(
+                        date, service["locationDetail"]["realtimeDeparture"]
+                    )
 
                 arrivals.append(
                     Arrival(
@@ -77,3 +91,7 @@ def transform_train_services_data(train_services: list[dict]):
             )
 
     return arrivals, cancellations
+
+
+def get_datetime_from_time_str(date: date, time: str) -> datetime:
+    return datetime.combine(date, datetime.strptime(time, "%H%M").time())

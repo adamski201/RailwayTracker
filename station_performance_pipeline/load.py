@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-from entities import Arrival, Operator, Station, Service
+from entities import Arrival, Operator, Station, Service, Cancellation, CancellationType
 from psycopg2._psycopg import connection, cursor
 
 
 def upload_arrivals(arrivals: list[Arrival], conn: connection) -> None:
     """
-    Uploads transformed data to the specified database. Tries to obtain the keys of
+    Uploads transformed arrival data to the specified database. Tries to obtain the keys of
     existing entities in the database; if it does not exist, uploads the entity.
     """
     cursor = conn.cursor()
@@ -26,7 +26,38 @@ def upload_arrivals(arrivals: list[Arrival], conn: connection) -> None:
 
         upload_arrival(conn, cursor, arrival, station_id, service_id)
 
-    conn.close()
+
+def upload_cancellations(cancellations: list[Cancellation], conn: connection) -> None:
+    """
+    Uploads transformed cancellation data to the specified database. Tries to obtain the keys of
+    existing entities in the database; if it does not exist, uploads the entity.
+    """
+    cursor = conn.cursor()
+
+    for cancellation in cancellations:
+        operator_id = get_operator_id(cursor, cancellation.service.operator)
+        if operator_id is None:
+            operator_id = upload_operator(conn, cursor, cancellation.service.operator)
+
+        station_id = get_station_id(cursor, cancellation.station)
+        if station_id is None:
+            station_id = upload_station(conn, cursor, cancellation.station)
+
+        service_id = get_service_id(cursor, cancellation.service)
+        if service_id is None:
+            service_id = upload_service(conn, cursor, cancellation.service, operator_id)
+
+        cancellation_type_id = get_cancellation_type_id(
+            cursor, cancellation.cancellation_type
+        )
+        if cancellation_type_id is None:
+            cancellation_type_id = upload_cancellation_type(
+                conn, cursor, cancellation.cancellation_type
+            )
+
+        upload_cancellation(
+            conn, cursor, cancellation, station_id, service_id, cancellation_type_id
+        )
 
 
 def get_operator_id(cursor: cursor, operator: Operator) -> int | None:
@@ -54,7 +85,8 @@ def upload_operator(conn: connection, cursor: cursor, operator: Operator) -> int
         INSERT INTO operators
             ("operator_name", "operator_code")
         VALUES 
-            (%s, %s);
+            (%s, %s)
+        RETURNING operator_id;
           """
 
     params = (operator.operator_name, operator.operator_code)
@@ -63,7 +95,7 @@ def upload_operator(conn: connection, cursor: cursor, operator: Operator) -> int
 
     conn.commit()
 
-    return int(cursor.lastrowid)
+    return cursor.fetchone()[0]
 
 
 def get_station_id(cursor: cursor, station: Station):
@@ -91,7 +123,9 @@ def upload_station(conn: connection, cursor: cursor, station: Station) -> int:
         INSERT INTO stations
             ("crs_code", "station_name")
         VALUES 
-            (%s, %s);
+            (%s, %s)
+        RETURNING
+            station_id;
           """
 
     params = (station.crs_code, station.station_name)
@@ -100,7 +134,7 @@ def upload_station(conn: connection, cursor: cursor, station: Station) -> int:
 
     conn.commit()
 
-    return int(cursor.lastrowid)
+    return cursor.fetchone()[0]
 
 
 def get_service_id(cursor: cursor, service: Service):
@@ -130,7 +164,8 @@ def upload_service(
         INSERT INTO services
             ("operator_id", "service_uid")
         VALUES 
-            (%s, %s);
+            (%s, %s)
+        RETURNING service_id;
           """
 
     params = (operator_id, service.service_uid)
@@ -139,7 +174,7 @@ def upload_service(
 
     conn.commit()
 
-    return int(cursor.lastrowid)
+    return cursor.fetchone()[0]
 
 
 def upload_arrival(
@@ -154,6 +189,73 @@ def upload_arrival(
               """
 
     params = (station_id, service_id, arrival.scheduled_arrival, arrival.actual_arrival)
+
+    cursor.execute(sql, params)
+
+    conn.commit()
+
+
+def get_cancellation_type_id(cursor: cursor, cancellation_type: CancellationType):
+    """
+    Attempts to match the service object to an existing entity in the database and extract
+    its primary key. Otherwise, returns None.
+    """
+    cursor.execute(
+        """
+        SELECT cancellation_type_id
+        FROM cancellation_types
+        WHERE cancellation_code = %s;
+        """,
+        (cancellation_type.cancellation_code,),
+    )
+
+    res = cursor.fetchone()
+
+    return res[0] if res else None
+
+
+def upload_cancellation_type(
+    conn: connection, cursor: cursor, cancellation_type: CancellationType
+) -> int:
+    sql = """
+        INSERT INTO cancellation_types
+            ("cancellation_code", "description")
+        VALUES 
+            (%s, %s)
+        RETURNING cancellation_type_id;
+          """
+
+    params = (cancellation_type.cancellation_code, cancellation_type.description)
+
+    cursor.execute(sql, params)
+
+    conn.commit()
+
+    return cursor.fetchone()[0]
+
+
+def upload_cancellation(
+    conn: connection,
+    cursor: cursor,
+    cancellation: Cancellation,
+    station_id: int,
+    service_id: int,
+    cancellation_type_id: int,
+) -> None:
+    """Uploads a cancellation object to the database."""
+    sql = """
+            INSERT INTO cancellations
+                ("station_id", "service_id", "cancellation_type_id", "scheduled_arrival")
+            VALUES 
+                (%s, %s, %s, %s);
+              """
+
+    params = (
+        station_id,
+        service_id,
+        cancellation_type_id,
+        cancellation.scheduled_arrival,
+    )
 
     cursor.execute(sql, params)
 

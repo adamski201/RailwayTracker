@@ -10,7 +10,7 @@ from extract import (
 
 from transform import transform_train_services_data
 
-from load import upload_arrivals
+from load import upload_arrivals, upload_cancellations
 
 if __name__ == "__main__":
     load_dotenv()
@@ -35,6 +35,10 @@ if __name__ == "__main__":
             password=ENV["REALTIME_API_PASS"],
         )
 
-        arrivals, cancellations = transform_train_services_data(services)
+        arrivals, cancellations = transform_train_services_data(services, date)
 
         upload_arrivals(conn=conn, arrivals=arrivals)
+
+        upload_cancellations(conn=conn, cancellations=cancellations)
+
+    conn.close()
