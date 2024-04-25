@@ -34,7 +34,7 @@ CREATE TABLE CancellationType(
     Description text
 );
 
-CREATE TABLE CancellationRecord(
+CREATE TABLE Cancellations(
     CancellationID INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     ScheduledArrival timestamp NOT NULL,
     CancellationTypeID INT REFERENCES CancellationType(CancellationTypeID),
@@ -42,7 +42,7 @@ CREATE TABLE CancellationRecord(
     ServiceID INT REFERENCES Service(ServiceID)
 );
 
-CREATE TABLE ArrivalRecord(
+CREATE TABLE Arrivals(
     ArrivalID INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     ScheduledArrival timestamp NOT NULL,
     ActualArrival timestamp NOT NULL,
@@ -72,7 +72,7 @@ CREATE TABLE OperatorSubscription(
     OperatorID INT REFERENCES Operator(OperatorID)
 );
 
-CREATE TABLE IncidentRecord(
+CREATE TABLE Incidents(
     IncidentRecordID INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     OperatorID INT REFERENCES Operator(OperatorID),
     CreationDate timestamp NOT NULL, 
