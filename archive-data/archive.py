@@ -15,17 +15,15 @@ def get_db_connection(config) -> connection:
     return connect(
         host=config["DB_HOST"],
         user=config["DB_USER"],
-        password=config["DB_PASSWORD"],
+        password=config["DB_PASS"],
         dbname=config["DB_NAME"],
         port=config["DB_PORT"],
         cursor_factory=RealDictCursor
     )
 
 
-def get_s3_client(config) -> boto3_client:
+def get_s3_client(config: dict[str, str]) -> boto3_client:
     """Returns an S3 client with the provided credentials."""
-
-    print(type(config))
 
     return client("s3",
                   aws_access_key_id=config["AWS_ACCESS_KEY_ID"],
@@ -33,7 +31,7 @@ def get_s3_client(config) -> boto3_client:
 
 
 def retrieve_old_data(conn: connection) -> pd.DataFrame:
-    """Retrieves data older than 24 hours."""
+    """Retrieves data older than 24 hours from the database."""
 
     with conn.cursor() as cur:
         cur.execute(
@@ -53,4 +51,7 @@ if __name__ == "__main__":
     load_dotenv()
 
     conn = get_db_connection(ENV)
+
     s3_client = get_s3_client(ENV)
+
+    old_data = retrieve_old_data(conn)
