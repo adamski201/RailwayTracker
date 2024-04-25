@@ -11,7 +11,7 @@ from test_data.test_vars import (OUTPUT_AFTER_PROCESSING_XML,
 
 UK_TIMEZONE = 'Europe/London'
 
-with open("test_data/test_incident_data.xml", "r", encoding="utf-8") as file:
+with open("incidents/test_data/test_incident_data.xml", "r", encoding="utf-8") as file:
     MSG = file.read()
 
 
