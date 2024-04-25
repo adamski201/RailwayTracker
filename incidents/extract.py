@@ -4,59 +4,73 @@ Knowledgebase (KB) Real Time Incidents API"""
 from time import sleep
 from os import environ as ENV
 import logging
+
 from dotenv import load_dotenv
 import stomp
 
 
-
-def connect_and_subscribe(connection, admin:str, passcode:str, sub_topic:str):
+def connect_and_subscribe(connection:stomp.StompConnection12, admin:str,
+                          passcode:str, sub_topic:str) -> None:
     """Connects and subscribes to relevant topic"""
 
     connection.connect(admin, passcode, wait=True)
     connection.subscribe(destination=f'/topic/{sub_topic}', id=1, ack='auto')
 
 
+def initialise_connection(config:dict[str, str]) -> None:
+    """Starts/resets connection"""
+
+    conn = get_stomp_conn(config)
+    conn.set_listener('', TrainListener())
+    connect_and_subscribe(conn, username, password, topic)
+    maintain_connection(conn)
+
+
+def maintain_connection(connection:stomp.Connection12) -> None:
+    """Maintains STOMP connection"""
+
+    try:
+        logging.info('Listening for KB messages...')
+        while True:
+            sleep(1)
+    except KeyboardInterrupt:
+        logging.info('Exiting...')
+        connection.disconnect()
+
+
 class TrainListener(stomp.ConnectionListener):
     """Provides methods to handle live data stream"""
 
-    def __init__(self):
-        self.reconnect_attempts = 0
-
     def on_error(self, frame):
         """Executes on error"""
-        logging.info(f'Received an error {frame.body}')
+        logging.info('Received an error %s', frame.body)
 
     def on_disconnected(self):
         """Executes if disconnection occurs"""
 
-        logging.info('Disconnected - attempting to reconnect...')
-
-        if self.reconnect_attempts >= 20:
-            logging.info('Maximum reconnect attempts reached. Exiting...')
-        else:
-            self.reconnect_attempts += 1
-            logging.info(f'Reconnect attempt {self.reconnect_attempts}')
-            sleep(10)
-            connect_and_subscribe(conn, username, password, topic)
-
+        logging.warning('Disconnected - attempting to reconnect...')
+        sleep(15)
+        initialise_connection(ENV)
 
     def on_message(self, frame):
         """Executes when message is received"""
-        logging.info(f'Received a message {frame.body}')
+
+        logging.info('Received  message %s', frame.body)
 
 
-
-def get_stomp_conn(config):
+def get_stomp_conn(config:dict[str, str]):
     """Returns STOMP connection"""
+
     return stomp.Connection12([(config["HOST"],
                                 config["STOMP_PORT"])],
-                                heartbeats=(4000, 4000),
+                                heartbeats=(6000, 6000),
                                 reconnect_sleep_initial=1,
-                                reconnect_sleep_increase=2,
-                                reconnect_attempts_max=20,
-                                heart_beat_receive_scale=2.5)
+                                reconnect_sleep_increase=1,
+                                reconnect_attempts_max=30)
 
 if __name__ == "__main__":
+
+    print(type(ENV))
 
     load_dotenv()
 
@@ -66,14 +80,4 @@ if __name__ == "__main__":
     password = ENV["PASSWORD"]
     topic = ENV["INCIDENTS_TOPIC"]
 
-    conn = get_stomp_conn(ENV)
-    conn.set_listener('', TrainListener())
-    connect_and_subscribe(conn, username, password, topic)
-
-    try:
-        logging.info('Listening for KB messages...')
-        while True:
-            sleep(1)
-    except KeyboardInterrupt:
-        logging.info('Exiting...')
-        conn.disconnect()
+    initialise_connection(ENV)
