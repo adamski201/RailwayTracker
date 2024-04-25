@@ -9,6 +9,7 @@ DROP TABLE IF EXISTS services;
 DROP TABLE IF EXISTS operators;
 DROP TABLE IF EXISTS stations;
 
+
 CREATE TABLE stations (
     station_id SERIAL PRIMARY KEY,
     crs_code VARCHAR(3) UNIQUE NOT NULL,
@@ -72,7 +73,7 @@ CREATE TABLE operator_subscriptions (
 );
 
 CREATE TABLE incidents (
-    incident_record_id SERIAL PRIMARY KEY,
+    incident_id SERIAL PRIMARY KEY,
     operator_id INT REFERENCES operators(operator_id),
     creation_date TIMESTAMP NOT NULL,
     description TEXT,
@@ -82,6 +83,6 @@ CREATE TABLE incidents (
     info_link TEXT,
     affected_routes TEXT,
     planned BOOLEAN NOT NULL,
-    incident_number VARCHAR(32) UNIQUE NOT NULL,
+    incident_uuid VARCHAR(32) UNIQUE NOT NULL,
     last_updated TIMESTAMP
 );
