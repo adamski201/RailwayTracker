@@ -1,13 +1,13 @@
-DROP TABLE IncidentRecord;
-DROP TABLE OperatorSubscription;
-DROP TABLE StationSubscription;
+DROP TABLE Incidents;
+DROP TABLE OperatorSubscriptions;
+DROP TABLE StationSubscriptions;
 DROP TABLE Users;
-DROP TABLE ArrivalRecord;
-DROP TABLE CancellationRecord;
-DROP TABLE CancellationType;
-DROP TABLE Service;
-DROP TABLE Operator;
-DROP TABLE Station;
+DROP TABLE Arrivals;
+DROP TABLE Cancellations;
+DROP TABLE CancellationTypes;
+DROP TABLE Services;
+DROP TABLE Operators;
+DROP TABLE Stations;
 
 
 CREATE TABLE Stations(
@@ -19,13 +19,13 @@ CREATE TABLE Stations(
 CREATE TABLE Operators(
     OperatorID INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY, 
     OperatorName varchar(60) NOT NULL,
-    ATOCOperatorCode varchar(2) UNIQUE
+    OperatorCode varchar(2) UNIQUE
 );
 
 CREATE TABLE Services(
     ServiceID INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    ServiceUUID varchar(6) UNIQUE NOT NULL,
-    OperatorID INT REFERENCES Operator(OperatorID)
+    ServiceUID varchar(6) UNIQUE NOT NULL,
+    OperatorID INT REFERENCES Operators(OperatorID)
 );
 
 CREATE TABLE CancellationTypes(
@@ -37,17 +37,17 @@ CREATE TABLE CancellationTypes(
 CREATE TABLE Cancellations(
     CancellationID INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     ScheduledArrival timestamp NOT NULL,
-    CancellationTypeID INT REFERENCES CancellationType(CancellationTypeID),
-    StationID INT REFERENCES Station(StationID),
-    ServiceID INT REFERENCES Service(ServiceID)
+    CancellationTypeID INT REFERENCES CancellationTypes(CancellationTypeID),
+    StationID INT REFERENCES Stations(StationID),
+    ServiceID INT REFERENCES Services(ServiceID)
 );
 
 CREATE TABLE Arrivals(
     ArrivalID INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     ScheduledArrival timestamp NOT NULL,
     ActualArrival timestamp NOT NULL,
-    StationID INT REFERENCES Station(StationID),
-    ServiceID INT REFERENCES Service(ServiceID)
+    StationID INT REFERENCES Stations(StationID),
+    ServiceID INT REFERENCES Services(ServiceID)
 );
 
 CREATE TABLE Users(
@@ -62,19 +62,19 @@ CREATE TABLE StationSubscriptions(
     StationSubscriptionID INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     IsActive BOOLEAN NOT NULL,
     UserID INT REFERENCES Users(UserID),
-    StationID INT REFERENCES Station(StationID)
+    StationID INT REFERENCES Stations(StationID)
 );
 
 CREATE TABLE OperatorSubscriptions(
     OperatorSubscriptionID INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     IsActive BOOLEAN NOT NULL,
     UserID INT REFERENCES Users(UserID),
-    OperatorID INT REFERENCES Operator(OperatorID)
+    OperatorID INT REFERENCES Operators(OperatorID)
 );
 
 CREATE TABLE Incidents(
     IncidentRecordID INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    OperatorID INT REFERENCES Operator(OperatorID),
+    OperatorID INT REFERENCES Operators(OperatorID),
     CreationDate timestamp NOT NULL, 
     Description text,
     Summary text, 
