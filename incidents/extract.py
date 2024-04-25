@@ -8,36 +8,6 @@ import logging
 from dotenv import load_dotenv
 import stomp
 
-
-def connect_and_subscribe(connection:stomp.StompConnection12, admin:str,
-                          passcode:str, sub_topic:str) -> None:
-    """Connects and subscribes to relevant topic"""
-
-    connection.connect(admin, passcode, wait=True)
-    connection.subscribe(destination=f'/topic/{sub_topic}', id=1, ack='auto')
-
-
-def initialise_connection(config:dict[str, str]) -> None:
-    """Starts/resets connection"""
-
-    conn = get_stomp_conn(config)
-    conn.set_listener('', TrainListener())
-    connect_and_subscribe(conn, username, password, topic)
-    maintain_connection(conn)
-
-
-def maintain_connection(connection:stomp.Connection12) -> None:
-    """Maintains STOMP connection"""
-
-    try:
-        logging.info('Listening for KB messages...')
-        while True:
-            sleep(1)
-    except KeyboardInterrupt:
-        logging.info('Exiting...')
-        connection.disconnect()
-
-
 class TrainListener(stomp.ConnectionListener):
     """Provides methods to handle live data stream"""
 
@@ -68,9 +38,37 @@ def get_stomp_conn(config:dict[str, str]):
                                 reconnect_sleep_increase=1,
                                 reconnect_attempts_max=30)
 
-if __name__ == "__main__":
 
-    print(type(ENV))
+def connect_and_subscribe(connection:stomp.StompConnection12, admin:str,
+                          passcode:str, sub_topic:str) -> None:
+    """Connects and subscribes to relevant topic"""
+
+    connection.connect(admin, passcode, wait=True)
+    connection.subscribe(destination=f'/topic/{sub_topic}', id=1, ack='auto')
+
+
+def initialise_connection(config:dict[str, str]) -> None:
+    """Starts/resets connection"""
+
+    conn = get_stomp_conn(config)
+    conn.set_listener('', TrainListener())
+    connect_and_subscribe(conn, username, password, topic)
+    maintain_connection(conn)
+
+
+def maintain_connection(connection:stomp.Connection12) -> None:
+    """Maintains STOMP connection"""
+
+    try:
+        logging.info('Listening for KB messages...')
+        while True:
+            sleep(1)
+    except KeyboardInterrupt:
+        logging.info('Exiting...')
+        connection.disconnect()
+
+
+if __name__ == "__main__":
 
     load_dotenv()
 
