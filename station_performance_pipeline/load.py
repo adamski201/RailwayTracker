@@ -36,23 +36,23 @@ def get_operator_id(cursor: cursor, operator: Operator) -> int | None:
     """
     cursor.execute(
         """
-        SELECT OperatorId
-        FROM Operators
-        WHERE OperatorCode = %s;
+        SELECT operator_id
+        FROM operators
+        WHERE operator_code = %s;
         """,
         (operator.operator_code,),
     )
 
     res = cursor.fetchone()
 
-    return res["OperatorId"] if res else None
+    return res[0] if res else None
 
 
 def upload_operator(conn: connection, cursor: cursor, operator: Operator) -> int:
     """Uploads an operator object to the database, returning the new ID of the uploaded entity."""
     sql = """
-        INSERT INTO Operators
-            ("operatorname", "operatorcode")
+        INSERT INTO operators
+            ("operator_name", "operator_code")
         VALUES 
             (%s, %s);
           """
@@ -73,23 +73,23 @@ def get_station_id(cursor: cursor, station: Station):
     """
     cursor.execute(
         """
-        SELECT StationId
-        FROM Stations
-        WHERE StationName = %s;
+        SELECT station_id
+        FROM stations
+        WHERE station_name = %s;
         """,
-        station.station_name,
+        (station.station_name,),
     )
 
     res = cursor.fetchone()
 
-    return res["StationId"] if res else None
+    return res[0] if res else None
 
 
 def upload_station(conn: connection, cursor: cursor, station: Station) -> int:
     """Uploads a station object to the database, returning the new ID of the uploaded entity."""
     sql = """
-        INSERT INTO Stations
-            ("CrsCode", "StationName")
+        INSERT INTO stations
+            ("crs_code", "station_name")
         VALUES 
             (%s, %s);
           """
@@ -110,16 +110,16 @@ def get_service_id(cursor: cursor, service: Service):
     """
     cursor.execute(
         """
-        SELECT serviceid
-        FROM Services
-        WHERE serviceuuid = %s;
+        SELECT service_id
+        FROM services
+        WHERE service_uid = %s;
         """,
-        service.service_uid,
+        (service.service_uid,),
     )
 
     res = cursor.fetchone()
 
-    return res["ServiceId"] if res else None
+    return res[0] if res else None
 
 
 def upload_service(
@@ -127,8 +127,8 @@ def upload_service(
 ) -> int:
     """Uploads a service object to the database, returning the new ID of the uploaded entity."""
     sql = """
-        INSERT INTO Services
-            ("OperatorId", "ServiceUUID")
+        INSERT INTO services
+            ("operator_id", "service_uid")
         VALUES 
             (%s, %s);
           """
@@ -147,8 +147,8 @@ def upload_arrival(
 ) -> None:
     """Uploads an arrival object to the database."""
     sql = """
-            INSERT INTO Arrivals
-                ("StationId", "ServiceId", "ScheduledArrival", "ActualArrival")
+            INSERT INTO arrivals
+                ("station_id", "service_id", "scheduled_arrival", "actual_arrival")
             VALUES 
                 (%s, %s, %s, %s);
               """
