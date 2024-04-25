@@ -1,6 +1,6 @@
 """Extract script for the station_performance pipeline."""
 
-from datetime import datetime, date
+from datetime import date
 
 import requests
 from requests.auth import HTTPBasicAuth
@@ -21,6 +21,7 @@ def fetch_train_services_data_for_station(
             f"{station_crs}/{date.year}/{date.month:02d}/{date.day:02d}"
         ),
         auth=HTTPBasicAuth(username, password),
+        timeout=60,
     )
 
     response.raise_for_status()

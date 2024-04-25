@@ -1,6 +1,8 @@
-from entities import Arrival, Cancellation, Operator, Station, Service, CancellationType
+"""Transforms raw data from the RTT API and converts it into cancellation and arrival objects."""
 
 from datetime import date, datetime
+
+from entities import Arrival, Cancellation, Operator, Station, Service, CancellationType
 
 
 def transform_train_services_data(train_services: list[dict], date: date):
@@ -13,7 +15,7 @@ def transform_train_services_data(train_services: list[dict], date: date):
     and departure."""
 
     if not train_services:
-        raise ValueError(f"No services for provided station.")
+        raise ValueError("No services for provided station.")
 
     station = Station(
         crs_code=train_services[0]["locationDetail"]["crs"],
@@ -87,11 +89,18 @@ def transform_train_services_data(train_services: list[dict], date: date):
                 )
         except KeyError as e:
             print(
-                f"KeyError: Missing {e} for service {service['serviceUid']} at station {station.station_name}."
+                (
+                    f"KeyError: Missing {e} for service {service['serviceUid']} "
+                    f"at station {station.station_name}."
+                )
             )
 
     return arrivals, cancellations
 
 
 def get_datetime_from_time_str(date: date, time: str) -> datetime:
+    """
+    Combines a given date object with a time string provided in the format %H%M
+    and returns a datetime object.
+    """
     return datetime.combine(date, datetime.strptime(time, "%H%M").time())
