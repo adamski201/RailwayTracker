@@ -72,6 +72,21 @@ CREATE TABLE operator_subscriptions (
     operator_id INT REFERENCES operators(operator_id)
 );
 
+<<<<<<< HEAD
+CREATE TABLE Incidents(
+    IncidentRecordID INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    OperatorID INT REFERENCES Operators(OperatorID),
+    CreationDate timestamp NOT NULL, 
+    Description text,
+    Summary text, 
+    StartDate timestamp NOT NULL,
+    EndDate timestamp,
+    InfoLink text,
+    AffectedRoutes text,
+    Planned BOOLEAN NOT NULL,
+    IncidentNumber varchar(32) UNIQUE NOT NULL,
+    LastUpdated timestamp NOT NULL
+=======
 CREATE TABLE incidents (
     incident_id SERIAL PRIMARY KEY,
     operator_id INT REFERENCES operators(operator_id),
@@ -85,4 +100,5 @@ CREATE TABLE incidents (
     planned BOOLEAN NOT NULL,
     incident_uuid VARCHAR(32) UNIQUE NOT NULL,
     last_updated TIMESTAMP NOT NULL
+>>>>>>> 92db23fe3f083d467620609b5ccb9eff9bb14d34
 );
