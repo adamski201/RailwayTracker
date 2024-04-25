@@ -84,5 +84,5 @@ CREATE TABLE Incidents(
     AffectedRoutes text,
     Planned BOOLEAN NOT NULL,
     IncidentNumber varchar(32) UNIQUE NOT NULL,
-    LastUpdated timestamp
+    LastUpdated timestamp NOT NULL
 );
