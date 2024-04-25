@@ -12,6 +12,7 @@ ns = {"ns": "http://nationalrail.co.uk/xml/incident",
 
 def process_xml(xml_message: str) -> list[dict]:
     """Processes each xml message to extract relevant information"""
+    
     if xml_message:
         root = ET.fromstring(xml_message)
         created_at = root.find(".//ns:CreationTime", ns).text
@@ -59,6 +60,7 @@ def process_xml(xml_message: str) -> list[dict]:
 
 def replace_new_line(df: pd.DataFrame) -> pd.DataFrame:
     """Replaces new line characters in description and routes affected"""
+
     df['description'] = df['description'].str.replace('\n', ' ')
     df['routes_affected'] = df['routes_affected'].str.replace('\n', ' ')
     return df
