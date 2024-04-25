@@ -55,7 +55,7 @@ CREATE TABLE users (
     first_name VARCHAR(30) NOT NULL,
     last_name VARCHAR(60) NOT NULL,
     phone_number VARCHAR(20),
-    email VARCHAR
+    email VARCHAR(320)
 );
 
 CREATE TABLE station_subscriptions (
@@ -84,5 +84,5 @@ CREATE TABLE incidents (
     affected_routes TEXT,
     planned BOOLEAN NOT NULL,
     incident_uuid VARCHAR(32) UNIQUE NOT NULL,
-    last_updated TIMESTAMP
+    last_updated TIMESTAMP NOT NULL
 );
