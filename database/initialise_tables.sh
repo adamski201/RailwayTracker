@@ -1,4 +1,4 @@
-read -p "Are you sure you want to run this script? (y/n): " confirm
+read -p "This will wipe the database! Are you sure you want to run this script? (y/n): " confirm
 if [ "$confirm" != "y" ]; then
     echo "Script execution aborted."
     exit 1
