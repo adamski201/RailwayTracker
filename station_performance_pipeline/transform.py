@@ -5,14 +5,12 @@ from datetime import date, datetime
 from entities import Arrival, Cancellation, Operator, Station, Service, CancellationType
 
 
-def transform_train_services_data(train_services: list[dict], date: date):
+def transform_train_services_data(
+    train_services: list[dict], date: date
+) -> tuple[list[Arrival], list[Cancellation]]:
     """This function accepts a list of dictionaries corresponding to the trains that
-    arrived, or were expected to arrive, at a specific station and returns another
-    list of dictionaries.
-    Each dictionary represents a train that arrived at the station on this day,
-    extracting only relevant data from the inputted list.
-    The dictionary has the keys related to the expected and actual times of arrival
-    and departure."""
+    arrived, or were expected to arrive, at a specific station and returns a tuple
+    consisting of a list of Arrival objects and a list of Cancellation objects."""
 
     if not train_services:
         raise ValueError("No services for provided station.")

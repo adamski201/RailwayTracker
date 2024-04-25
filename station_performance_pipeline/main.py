@@ -2,15 +2,15 @@
 
 from datetime import date, timedelta
 from os import environ as ENV
+
 import psycopg2
 from dotenv import load_dotenv
+
 from extract import (
     fetch_train_services_data_for_station,
 )
-
-from transform import transform_train_services_data
-
 from load import upload_arrivals, upload_cancellations
+from transform import transform_train_services_data
 
 if __name__ == "__main__":
     load_dotenv()
