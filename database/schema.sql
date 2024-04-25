@@ -10,25 +10,25 @@ DROP TABLE Operator;
 DROP TABLE Station;
 
 
-CREATE TABLE Station(
+CREATE TABLE Stations(
     StationID INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY, 
     CRSCode varchar(3) UNIQUE NOT NULL,
     StationName varchar(60) NOT NULL
 );
 
-CREATE TABLE Operator(
+CREATE TABLE Operators(
     OperatorID INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY, 
     OperatorName varchar(60) NOT NULL,
     ATOCOperatorCode varchar(2) UNIQUE
 );
 
-CREATE TABLE Service(
+CREATE TABLE Services(
     ServiceID INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     ServiceUUID varchar(6) UNIQUE NOT NULL,
     OperatorID INT REFERENCES Operator(OperatorID)
 );
 
-CREATE TABLE CancellationType(
+CREATE TABLE CancellationTypes(
     CancellationTypeID INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     CancellationCode varchar(2) UNIQUE NOT NULL,
     Description text
@@ -58,14 +58,14 @@ CREATE TABLE Users(
     Email varchar
 );
 
-CREATE TABLE StationSubscription(
+CREATE TABLE StationSubscriptions(
     StationSubscriptionID INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     IsActive BOOLEAN NOT NULL,
     UserID INT REFERENCES Users(UserID),
     StationID INT REFERENCES Station(StationID)
 );
 
-CREATE TABLE OperatorSubscription(
+CREATE TABLE OperatorSubscriptions(
     OperatorSubscriptionID INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     IsActive BOOLEAN NOT NULL,
     UserID INT REFERENCES Users(UserID),
