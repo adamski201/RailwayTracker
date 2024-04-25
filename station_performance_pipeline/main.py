@@ -23,9 +23,9 @@ if __name__ == "__main__":
         port=ENV["DB_PORT"],
     )
 
-    stations = ["BHM", "HML", "DEW", "PAD"]
-
     date = date.today() - timedelta(days=1)
+
+    stations = ["LTN"]
 
     for station in stations:
         services = fetch_train_services_data_for_station(
@@ -38,7 +38,6 @@ if __name__ == "__main__":
         arrivals, cancellations = transform_train_services_data(services, date)
 
         upload_arrivals(conn=conn, arrivals=arrivals)
-
         upload_cancellations(conn=conn, cancellations=cancellations)
 
     conn.close()
