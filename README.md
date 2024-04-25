@@ -75,7 +75,8 @@ terraform destroy
 
 ![ERD diagram](https://drawsql.app/teams/isaac-11/diagrams/railway-tracker-3)
 
-<img width="1250" alt="Screenshot 2024-04-24 at 17 03 52" src="https://github.com/adamski201/Railway-Tracker/assets/84942651/fb1fb8fc-6a11-4cb5-a222-69a738afcb33">
+![image](https://github.com/adamski201/Railway-Tracker/assets/84942651/9e6dc207-77bf-41b4-b83a-ae77c5825deb)
+
 
 
 
