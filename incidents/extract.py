@@ -8,6 +8,8 @@ import logging
 from dotenv import load_dotenv
 import stomp
 
+from transform import transform_message
+
 class TrainListener(stomp.ConnectionListener):
     """Provides methods to handle live data stream"""
 
@@ -26,6 +28,8 @@ class TrainListener(stomp.ConnectionListener):
         """Executes when message is received"""
 
         logging.info('Received  message %s', frame.body)
+        cleaned_msg = transform_message(frame.body)
+        print(cleaned_msg)
 
 
 def get_stomp_conn(config:dict[str, str]):
