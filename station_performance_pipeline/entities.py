@@ -10,31 +10,9 @@ class Operator:
 
 
 @dataclass
-class User:
-    first_name: str
-    last_name: str
-    phone_number: Optional[str]
-    email: str
-
-
-@dataclass
 class Station:
     crs_code: str
     station_name: str
-
-
-@dataclass
-class StationSubscription:
-    user: User
-    station: Station
-    is_active: bool
-
-
-@dataclass
-class OperatorSubscription:
-    operator: Operator
-    user: User
-    is_active: bool
 
 
 @dataclass

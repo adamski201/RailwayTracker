@@ -1,7 +1,7 @@
-from entities import Arrival
+from entities import Arrival, Cancellation, Operator, Station, Service, CancellationType
 
 
-def train_station_arrival_data(train_services: list[dict]) -> list[dict]:
+def transform_train_services_data(train_services: list[dict]):
     """This function accepts a list of dictionaries corresponding to the trains that
     arrived, or were expected to arrive, at a specific station and returns another
     list of dictionaries.
@@ -10,70 +10,70 @@ def train_station_arrival_data(train_services: list[dict]) -> list[dict]:
     The dictionary has the keys related to the expected and actual times of arrival
     and departure."""
 
-    if len(train_services) != 0:
-        station_crs = train_services[0]["locationDetail"]["crs"]
-        station_name = train_services[0]["locationDetail"]["description"]
+    if not train_services:
+        raise ValueError(f"No services for provided station.")
 
-        arrived_services = []
-        for service in train_services:
+    station = Station(
+        crs_code=train_services[0]["locationDetail"]["crs"],
+        station_name=train_services[0]["locationDetail"]["description"],
+    )
 
-            if "cancelReasonCode" in service["locationDetail"].keys():
-                continue
+    arrivals = []
+    cancellations = []
+    for service in train_services:
+        if service["serviceType"] != "train":
+            continue
 
-            arrived_service = {"service_id": service["serviceUid"]}
-            if "gbttBookedArrival" in service["locationDetail"].keys():
-                arrived_service["scheduled_arrival"] = service["locationDetail"][
-                    "gbttBookedArrival"
-                ]
-                arrived_service["actual_arrival"] = service["locationDetail"][
-                    "realtimeArrival"
-                ]
-            if "gbttBookedDeparture" in service["locationDetail"].keys():
-                arrived_service["scheduled_departure"] = service["locationDetail"][
-                    "gbttBookedDeparture"
-                ]
-                arrived_service["actual_departure"] = service["locationDetail"][
-                    "realtimeDeparture"
-                ]
-            arrived_service["station_crs"] = station_crs
-            arrived_service["station_name"] = station_name
-            arrived_service["atoc_code"] = service["atocCode"]
-            arrived_service["atoc_name"] = service["atocName"]
+        try:
+            operator = Operator(
+                operator_name=service["atocName"], operator_code=service["atocCode"]
+            )
 
-            arrived_services.append(arrived_service)
-
-        return arrived_services
-
-    return []
-
-
-def train_station_cancellation_data(train_services: list[dict]) -> list[dict]:
-    """This function accepts a list of dictionaries corresponding to the trains that arrived,
-    or were expected to arrive, at a specific station and returns another list of dictionaries.
-    Each dictionary represents a train that had intended to arrive that day, but was cancelled.
-    The outputted dictionaries contain a (relevant) subset of the inputted data related
-    to the reasons of cancellation."""
-
-    if len(train_services) != 0:
-        station_crs = train_services[0]["locationDetail"]["crs"]
-        station_name = train_services[0]["locationDetail"]["description"]
-
-        cancelled_services = []
-        for service in train_services:
+            train_service = Service(
+                operator=operator, service_uid=service["serviceUid"]
+            )
 
             if "cancelReasonCode" in service["locationDetail"].keys():
-                cancelled_service = {
-                    "service_id": service["serviceUid"],
-                    "cancellation_code": service["locationDetail"]["cancelReasonCode"],
-                    "cancel_reason": service["locationDetail"]["cancelReasonLongText"],
-                    "station_crs": station_crs,
-                    "station_name": station_name,
-                    "atoc_code": service["atocCode"],
-                    "atoc_name": service["atocName"],
-                }
+                cancellation_type = CancellationType(
+                    cancellation_code=service["locationDetail"]["cancelReasonCode"],
+                    description=service["locationDetail"]["cancelReasonLongText"],
+                )
 
-                cancelled_services.append(cancelled_service)
+                if "gbttBookedArrival" in service["locationDetail"]:
+                    scheduled_time = service["locationDetail"]["gbttBookedArrival"]
+                else:
+                    scheduled_time = service["locationDetail"]["gbttBookedDeparture"]
 
-        return cancelled_services
+                cancellations.append(
+                    Cancellation(
+                        cancellation_type=cancellation_type,
+                        station=station,
+                        service=train_service,
+                        scheduled_arrival=scheduled_time,
+                    )
+                )
+            else:
+                if (
+                    "gbttBookedArrival" in service["locationDetail"]
+                    and "realtimeArrival" in service["locationDetail"]
+                ):
+                    scheduled_time = service["locationDetail"]["gbttBookedArrival"]
+                    actual_time = service["locationDetail"]["realtimeArrival"]
+                else:
+                    scheduled_time = service["locationDetail"]["gbttBookedDeparture"]
+                    actual_time = service["locationDetail"]["realtimeDeparture"]
 
-    return []
+                arrivals.append(
+                    Arrival(
+                        station=station,
+                        service=train_service,
+                        scheduled_arrival=scheduled_time,
+                        actual_arrival=actual_time,
+                    )
+                )
+        except KeyError as e:
+            print(
+                f"KeyError: Missing {e} for service {service['serviceUid']} at station {station.station_name}."
+            )
+
+    return arrivals, cancellations
