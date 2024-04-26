@@ -76,14 +76,9 @@ terraform destroy
 <img width="1252" alt="Screenshot 2024-04-25 at 12 13 24" src="https://github.com/adamski201/Railway-Tracker/assets/84942651/0f61da7e-3e7a-447a-85ff-6d2b9c3b95bc">
 
 
-
-
-
-
-
 ### Cloud architecture diagram
 
-![Cloud architecture diagram](...)
+![Cloud architecture diagram](https://github.com/adamski201/Railway-Tracker/blob/update-arch-diagram/images/architecture_diagram.png)
 
 ### Dashboard Wireframe
 
