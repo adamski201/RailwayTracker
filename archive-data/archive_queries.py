@@ -1,4 +1,4 @@
-"""Contains SQL queries for the archiving process."""
+"""Contains SQL queries for the archiving process"""
 
 # Station_performance queries
 S_DELAYS = """
@@ -70,22 +70,22 @@ WHERE
 GROUP BY
     cancellations.station_id, day
 ORDER BY
-    day, arrivals.station_id ASC;
+    day, cancellations.station_id ASC;
 """
 
 S_COMMON_CANCELLATION = """
 WITH
     cancellation_counts
         AS (
-          SELECT
-                cancellations.station_id, DATE(cancellations.scheduled_arrival) AS day,
-                cancellations.cancellation_type_id, COUNT(*) AS count
-          FROM
-                cancellations
-          WHERE
-              cancellations.scheduled_arrival < CURRENT_DATE - INTERVAL '7 days'
-          GROUP BY
-              cancellations.station_id, DATE(cancellations.scheduled_arrival), cancellations.cancellation_type_id
+        SELECT
+            cancellations.station_id, DATE(cancellations.scheduled_arrival) AS day,
+            cancellations.cancellation_type_id, COUNT(*) AS count
+        FROM
+            cancellations
+        WHERE
+            cancellations.scheduled_arrival < CURRENT_DATE - INTERVAL '7 days'
+        GROUP BY
+            cancellations.station_id, DATE(cancellations.scheduled_arrival), cancellations.cancellation_type_id
             ),
     ranked_cancellation_types
         AS (
@@ -102,7 +102,13 @@ SELECT
 FROM
     ranked_cancellation_types
 WHERE
-    rank = 1;
+    rank = 1
+ORDER BY
+    day, station_id ASC;
 """
 
 # Operator_performance queries
+
+O_DELAYS = """
+
+"""
