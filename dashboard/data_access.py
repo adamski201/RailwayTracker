@@ -27,3 +27,49 @@ def get_station_names() -> list[str]:
     )
 
     return [x[0] for x in cur.fetchall()]
+
+
+def get_total_arrivals_for_station(station_name: str) -> int:
+    cur.execute(
+        """
+        SELECT COUNT(*)
+        FROM arrivals
+        LEFT JOIN stations
+            ON arrivals.station_id = stations.station_id
+        WHERE stations.station_name LIKE %s
+        """,
+        (station_name,),
+    )
+
+    return cur.fetchone()[0]
+
+
+def get_total_cancellations_for_station(station_name: str) -> int:
+    cur.execute(
+        """
+        SELECT COUNT(*)
+        FROM cancellations
+        LEFT JOIN stations
+            ON cancellations.station_id = stations.station_id
+        WHERE stations.station_name LIKE %s
+        """,
+        (station_name,),
+    )
+
+    return cur.fetchone()[0]
+
+
+def get_total_delays_for_station(threshold: int, station_name: str) -> int:
+    cur.execute(
+        """
+        SELECT COUNT(*)
+        FROM arrivals
+        LEFT JOIN stations
+            ON arrivals.station_id = stations.station_id
+        WHERE stations.station_name LIKE %s
+        AND EXTRACT(EPOCH FROM actual_arrival - scheduled_arrival)/60 > %s
+        """,
+        (station_name, threshold),
+    )
+
+    return cur.fetchone()[0]
