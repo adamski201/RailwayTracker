@@ -12,6 +12,8 @@ from transform import transform_train_services_data
 
 STATIONS_FILENAME = "stations.csv"
 
+DAY_DELTA = 1
+
 if __name__ == "__main__":
     load_dotenv()
 
@@ -23,7 +25,7 @@ if __name__ == "__main__":
         port=ENV["DB_PORT"],
     )
 
-    date = date.today() - timedelta(days=1)
+    date = date.today() - timedelta(days=DAY_DELTA)
 
     stations = load_row_from_csv(STATIONS_FILENAME)
 
