@@ -9,6 +9,8 @@ from dotenv import load_dotenv
 import stomp
 
 from transform import transform_message
+from load import load_to_database
+
 
 class TrainListener(stomp.ConnectionListener):
     """Provides methods to handle live data stream"""
@@ -27,31 +29,32 @@ class TrainListener(stomp.ConnectionListener):
     def on_message(self, frame):
         """Executes when message is received"""
 
-        logging.info('Received  message %s', frame.body)
+        logging.info('Received message')
         cleaned_msg = transform_message(frame.body)
-        print(cleaned_msg)
+        logging.info('Data has been cleaned')
+        load_to_database(ENV, cleaned_msg)
+        logging.info('Data has been inserted into database')
 
 
-def get_stomp_conn(config:dict[str, str]):
+def get_stomp_conn(config: dict[str, str]):
     """Returns STOMP connection"""
 
     return stomp.Connection12([(config["HOST"],
                                 config["STOMP_PORT"])],
-                                heartbeats=(6000, 6000),
-                                reconnect_sleep_initial=1,
-                                reconnect_sleep_increase=1,
-                                reconnect_attempts_max=30)
+                              reconnect_sleep_initial=1,
+                              reconnect_sleep_increase=1,
+                              reconnect_attempts_max=30)
 
 
-def connect_and_subscribe(connection:stomp.StompConnection12, admin:str,
-                          passcode:str, sub_topic:str) -> None:
+def connect_and_subscribe(connection: stomp.StompConnection12, admin: str,
+                          passcode: str, sub_topic: str) -> None:
     """Connects and subscribes to relevant topic"""
 
     connection.connect(admin, passcode, wait=True)
     connection.subscribe(destination=f'/topic/{sub_topic}', id=1, ack='auto')
 
 
-def initialise_connection(config:dict[str, str]) -> None:
+def initialise_connection(config: dict[str, str]) -> None:
     """Starts/resets connection"""
 
     conn = get_stomp_conn(config)
@@ -60,7 +63,7 @@ def initialise_connection(config:dict[str, str]) -> None:
     maintain_connection(conn)
 
 
-def maintain_connection(connection:stomp.Connection12) -> None:
+def maintain_connection(connection: stomp.Connection12) -> None:
     """Maintains STOMP connection"""
 
     try:

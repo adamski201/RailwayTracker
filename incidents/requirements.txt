@@ -4,3 +4,4 @@ stomp.py
 bs4
 pandas
 pytest
+psycopg2-binary
