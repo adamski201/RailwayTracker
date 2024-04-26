@@ -97,7 +97,7 @@ WITH
             FROM
                 cancellation_counts
         )
-SELECT
+SELECT DISTINCT ON (station_id, day)
     station_id, day,
     cancellation_type_id AS common_cancel_code
 FROM
@@ -105,7 +105,7 @@ FROM
 WHERE
     rank = 1
 ORDER BY
-    day, station_id ASC;
+    station_id, day, cancellation_type_id;
 """
 
 # Operator_performance queries
@@ -218,7 +218,7 @@ WITH
             INNER JOIN
                 operators ON services.operator_id = operators.operator_id
             WHERE
-                cancellations.scheduled_arrival < CURRENT_DATE - INTERVAL '4 days'
+                cancellations.scheduled_arrival < CURRENT_DATE - INTERVAL '7 days'
             GROUP BY
                 operators.operator_id, day, cancellations.cancellation_type_id
         ),
@@ -231,12 +231,12 @@ WITH
         FROM
             cancellation_counts
         )
-SELECT
+SELECT DISTINCT ON (operator_id, day)
     operator_id, day, cancellation_type_id AS common_cancel_code
 FROM
     ranked_cancellation_types
 WHERE
     rank = 1
 ORDER BY
-    day, operator_id;
+    operator_id, day, cancellation_type_id;
 """
