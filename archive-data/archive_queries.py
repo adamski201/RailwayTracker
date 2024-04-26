@@ -66,7 +66,7 @@ SELECT
 FROM
     cancellations
 WHERE
-    cancellations.scheduled_arrival < CURRENT_DATE - INTERVAL '1 days'
+    cancellations.scheduled_arrival < CURRENT_DATE - INTERVAL '7 days'
 GROUP BY
     cancellations.station_id, day
 ORDER BY
@@ -78,33 +78,31 @@ WITH
     cancellation_counts
         AS (
           SELECT
-                stations.station_id, stations.station_name, DATE(cancellations.scheduled_arrival) AS day,
+                cancellations.station_id, DATE(cancellations.scheduled_arrival) AS day,
                 cancellations.cancellation_type_id, COUNT(*) AS count
           FROM
                 cancellations
-          JOIN
-                stations ON cancellations.station_id = stations.station_id
           WHERE
-              cancellations.scheduled_arrival < CURRENT_DATE - INTERVAL '6 days'
+              cancellations.scheduled_arrival < CURRENT_DATE - INTERVAL '7 days'
           GROUP BY
-              stations.station_id,stations.station_name, DATE(cancellations.scheduled_arrival), cancellations.cancellation_type_id
+              cancellations.station_id, DATE(cancellations.scheduled_arrival), cancellations.cancellation_type_id
             ),
     ranked_cancellation_types
         AS (
             SELECT
-                station_id, station_name, day,
+                station_id, day,
                 cancellation_type_id, count,
                 RANK() OVER (PARTITION BY station_id, day ORDER BY count DESC) AS rank
             FROM
                 cancellation_counts
             )
 SELECT
-    station_id, station_name, day,
+    station_id, day,
     cancellation_type_id AS common_cancel_code
 FROM
     ranked_cancellation_types
 WHERE
-rank = 1;
+    rank = 1;
 """
 
 # Operator_performance queries
