@@ -23,7 +23,7 @@ if __name__ == "__main__":
         port=ENV["DB_PORT"],
     )
 
-    date = date.today() - timedelta(days=7)
+    date = date.today() - timedelta(days=1)
 
     stations = load_row_from_csv(STATIONS_FILENAME)
 
