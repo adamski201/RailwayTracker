@@ -76,26 +76,27 @@ ORDER BY
 S_COMMON_CANCELLATION = """
 WITH
     cancellation_counts
-        AS (
-        SELECT
-            cancellations.station_id, DATE(cancellations.scheduled_arrival) AS day,
-            cancellations.cancellation_type_id, COUNT(*) AS count
-        FROM
-            cancellations
-        WHERE
-            cancellations.scheduled_arrival < CURRENT_DATE - INTERVAL '7 days'
-        GROUP BY
-            cancellations.station_id, DATE(cancellations.scheduled_arrival), cancellations.cancellation_type_id
-            ),
-    ranked_cancellation_types
-        AS (
+        AS 
+        (
             SELECT
-                station_id, day,
-                cancellation_type_id, count,
+                cancellations.station_id, DATE(cancellations.scheduled_arrival) AS day,
+                cancellations.cancellation_type_id, COUNT(*) AS count
+            FROM
+                cancellations
+            WHERE
+                cancellations.scheduled_arrival < CURRENT_DATE - INTERVAL '7 days'
+            GROUP BY
+                cancellations.station_id, day, cancellations.cancellation_type_id
+        ),
+    ranked_cancellation_types
+        AS 
+        (
+            SELECT
+                station_id, day, cancellation_type_id, count,
                 RANK() OVER (PARTITION BY station_id, day ORDER BY count DESC) AS rank
             FROM
                 cancellation_counts
-            )
+        )
 SELECT
     station_id, day,
     cancellation_type_id AS common_cancel_code
@@ -201,4 +202,41 @@ ORDER BY
     day, operators.operator_id ASC;
 """
 
-O_COMMON_CANCELLATION = """ """
+O_COMMON_CANCELLATION = """
+WITH 
+    cancellation_counts 
+        AS 
+        (
+            SELECT
+                operators.operator_id, DATE(cancellations.scheduled_arrival) AS day,
+                cancellations.cancellation_type_id,
+                COUNT(*) AS count
+            FROM
+                cancellations
+            INNER JOIN
+                services ON cancellations.service_id = services.service_id
+            INNER JOIN
+                operators ON services.operator_id = operators.operator_id
+            WHERE
+                cancellations.scheduled_arrival < CURRENT_DATE - INTERVAL '4 days'
+            GROUP BY
+                operators.operator_id, day, cancellations.cancellation_type_id
+        ),
+    ranked_cancellation_types 
+        AS 
+        (
+        SELECT
+            operator_id, day, cancellation_type_id, count,
+            RANK() OVER (PARTITION BY operator_id, day ORDER BY count DESC) AS rank
+        FROM
+            cancellation_counts
+        )
+SELECT
+    operator_id, day, cancellation_type_id AS common_cancel_code
+FROM
+    ranked_cancellation_types
+WHERE
+    rank = 1
+ORDER BY
+    day, operator_id;
+"""
