@@ -31,7 +31,9 @@ class TrainListener(stomp.ConnectionListener):
 
         logging.info('Received message')
         cleaned_msg = transform_message(frame.body)
+        logging.info('Data has been cleaned')
         load_to_database(ENV, cleaned_msg)
+        logging.info('Data has been inserted into database')
 
 
 def get_stomp_conn(config: dict[str, str]):
