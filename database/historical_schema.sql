@@ -4,7 +4,7 @@ DROP TABLE IF EXISTS historical_data.operator_performance;
 CREATE TABLE historical_data.station_performance(
     station_performance_id SERIAL PRIMARY KEY,
     station_id INT REFERENCES public.stations(station_id),
-    day TIMESTAMP NOT NULL,
+    day DATE NOT NULL,
     cancellation_count INT NOT NULL,
     delay_1m_count INT NOT NULL, 
     delay_5m_count INT NOT NULL, 
@@ -16,7 +16,7 @@ CREATE TABLE historical_data.station_performance(
 CREATE TABLE historical_data.operator_performance(
     operator_performance_id SERIAL PRIMARY KEY,
     operator_id INT REFERENCES public.operators(operator_id),
-    day TIMESTAMP NOT NULL,
+    day DATE NOT NULL,
     cancellation_count INT NOT NULL,
     delay_1m_count INT NOT NULL, 
     delay_5m_count INT NOT NULL, 
