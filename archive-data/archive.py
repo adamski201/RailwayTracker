@@ -12,8 +12,8 @@ from psycopg2.extras import RealDictCursor
 from psycopg2.extensions import connection
 import pandas as pd
 
-STATIONS_FILENAME = f"stations-archived-data-{datetime.now().date()}.csv"
-OPERATOR_FILENAME = f"operator-archived-data-{datetime.now().date()}.csv"
+from archive_queries import DELAYS_PER_DAY, DELAYS_PER_DAY_OVER_5_MIN
+
 
 def get_db_connection(config: dict[str, str]) -> connection:
     """Returns a connection to a database"""
@@ -50,11 +50,15 @@ def query_database(conn: connection, query: str) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
-def get_stations_data():
+def get_station_performance():
     pass
 
 
-def get_operators_data():
+def get_operator_performance():
+    pass
+
+
+def add_archive_to_db(schema: str, data):
     pass
 
 
@@ -72,8 +76,8 @@ if __name__ == "__main__":
     s3_client = get_s3_client(ENV)
 
     # query the database
-    historical_data_df_1 = query_database(conn, "select * from operators")
-    historical_data_df_2 = query_database(conn, "select * from services")
+    historical_data_df_1 = query_database(conn, DELAYS_PER_DAY)
+    historical_data_df_2 = query_database(conn, DELAYS_PER_DAY_OVER_5_MIN)
 
     # combine the dataframes
     combined_df = pd.merge(historical_data_df_1, historical_data_df_2, on=['station_name'], how='outer')
@@ -82,9 +86,9 @@ if __name__ == "__main__":
     combined_df.fillna(0, inplace=True)
 
     # Save to csv
-    file = 'combined_station_delays.csv'
-    if not combined_df.empty:
-        combined_df.to_csv(file, index=False)
+    # file = 'combined_station_delays.csv'
+    # if not combined_df.empty:
+    #     combined_df.to_csv(file, index=False)
 
-    # Upload to s3
+    # Upload back to rds
     # add_csv_to_bucket(s3_client, file, ENV["S3_BUCKET"], file)
