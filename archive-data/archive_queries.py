@@ -99,7 +99,7 @@ WITH
         )
 SELECT DISTINCT ON (station_id, day)
     station_id, day,
-    cancellation_type_id AS common_cancel_code
+    cancellation_type_id AS common_cancel_code_id
 FROM
     ranked_cancellation_types
 WHERE
@@ -232,7 +232,7 @@ WITH
             cancellation_counts
         )
 SELECT DISTINCT ON (operator_id, day)
-    operator_id, day, cancellation_type_id AS common_cancel_code
+    operator_id, day, cancellation_type_id AS common_cancel_code_id
 FROM
     ranked_cancellation_types
 WHERE
