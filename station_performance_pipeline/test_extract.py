@@ -14,7 +14,7 @@ def sample_csv_file(tmpdir):
     return sample_filename
 
 
-def test_load_column_from_csv(sample_csv_file):
+def test_load_row_from_csv(sample_csv_file):
     # Call the function to load the first column
     result = load_row_from_csv(sample_csv_file, row_index=0, has_header=True)
 
