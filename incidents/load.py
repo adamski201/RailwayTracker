@@ -6,7 +6,7 @@ from psycopg2.extras import RealDictCursor
 
 
 def get_db_connection(config: dict[str, str]) -> connection:
-    """Returns a connection to the database."""
+    """Returns a connection to the database"""
 
     return connect(
         dbname=config["DB_NAME"],
