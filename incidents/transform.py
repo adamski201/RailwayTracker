@@ -1,4 +1,5 @@
 """Functions to transform and clean extracted data"""
+
 import xml.etree.ElementTree as ET
 
 import pandas as pd
@@ -12,7 +13,7 @@ ns = {"ns": "http://nationalrail.co.uk/xml/incident",
 
 def process_xml(xml_message: str) -> list[dict]:
     """Processes each xml message to extract relevant information"""
-    
+
     if xml_message:
         root = ET.fromstring(xml_message)
         created_at = root.find(".//ns:CreationTime", ns).text
@@ -80,7 +81,7 @@ def convert_timestamps(df: pd.DataFrame, timezone: str) -> pd.DataFrame:
     return df
 
 
-def transform_message(message):
+def transform_message(message: str):
     """Transforms/cleans each message"""
 
     data = process_xml(message)

@@ -30,22 +30,6 @@
                 <ns3:OperatorRef>VT</ns3:OperatorRef>
                 <ns3:OperatorName>Avanti West Coast</ns3:OperatorName>
             </ns3:AffectedOperator>
-            <ns3:AffectedOperator>
-                <ns3:OperatorRef>XC</ns3:OperatorRef>
-                <ns3:OperatorName>CrossCountry</ns3:OperatorName>
-            </ns3:AffectedOperator>
-            <ns3:AffectedOperator>
-                <ns3:OperatorRef>LN</ns3:OperatorRef>
-                <ns3:OperatorName>London Northwestern Railway</ns3:OperatorName>
-            </ns3:AffectedOperator>
-            <ns3:AffectedOperator>
-                <ns3:OperatorRef>AW</ns3:OperatorRef>
-                <ns3:OperatorName>Transport for Wales</ns3:OperatorName>
-            </ns3:AffectedOperator>
-            <ns3:AffectedOperator>
-                <ns3:OperatorRef>WM</ns3:OperatorRef>
-                <ns3:OperatorName>West Midlands Railway</ns3:OperatorName>
-            </ns3:AffectedOperator>
         </ns3:Operators>
         <ns3:RoutesAffected>&lt;p&gt;Routes&lt;/p&gt;</ns3:RoutesAffected>
     </ns3:Affects>
