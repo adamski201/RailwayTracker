@@ -143,3 +143,9 @@ with col[0]:
 
 with col[1]:
     st.subheader(f"{selected_station}")
+    line_chart = (
+        alt.Chart(df_arrivals)
+        .mark_line()
+        .encode(x="scheduled_arrival:T", y="delay:Q")
+        .properties(width=800, height=400, title="Train Performance")
+    )
