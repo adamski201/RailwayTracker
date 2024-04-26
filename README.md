@@ -73,11 +73,11 @@ terraform destroy
 
 ### ERD diagram for Short-term Storage
 
-![ERD diagram 1](...)
+![ERD diagram 1](https://github.com/adamski201/Railway-Tracker/blob/main/images/erd_short.png)
 
 ### ERD diagram for Long-term Storage
 
-![ERD diagram 2](...)
+![ERD diagram 2](https://github.com/adamski201/Railway-Tracker/blob/main/images/erd_long.png)
 
 ### Cloud architecture diagram
 
