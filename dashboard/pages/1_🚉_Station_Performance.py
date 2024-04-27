@@ -1,4 +1,4 @@
-from datetime import timedelta, date
+from datetime import timedelta, date, datetime
 
 import streamlit as st
 import data_access as data
@@ -117,6 +117,7 @@ def get_color_for_value(value):
 
 
 col = st.columns((1.5, 4.5, 2), gap="medium")
+
 with col[0]:
     st.subheader("Daily")
 
@@ -142,10 +143,48 @@ with col[0]:
         st.altair_chart(donut_chart_delays)
 
 with col[1]:
-    st.subheader(f"{selected_station}")
-    line_chart = (
-        alt.Chart(df_arrivals)
-        .mark_line()
-        .encode(x="scheduled_arrival:T", y="delay:Q")
-        .properties(width=800, height=400, title="Train Performance")
+    # Filter buttons
+    time_range = st.radio(
+        "Select time range:",
+        options=["24 hours", "7 days", "30 days"],
+        horizontal=True,
+        index=2,
     )
+    if time_range == "24 hours":
+        days_delta = 1
+    elif time_range == "7 days":
+        days_delta = 7
+    else:
+        days_delta = 30
+
+    delay_breakdown = data.get_delay_breakdown_for_station(
+        selected_station, 5, days_delta
+    )
+
+    delay_breakdown["pct_delayed"] = (
+        delay_breakdown["pct_delayed"].apply(float).apply(lambda x: x / 100)
+    )
+    delay_breakdown["interval_start"] = delay_breakdown["interval_start"].apply(
+        lambda x: datetime.strptime(x.strftime("%H:%M") + ":00", "%H:%M:%S")
+    )
+
+    chart = (
+        alt.Chart(delay_breakdown)
+        .mark_bar()
+        .encode(
+            alt.X(
+                "interval_start:T",
+                axis=alt.Axis(title="Time of day", format="%I%p"),
+            ),
+            alt.Y(
+                "pct_delayed:Q", axis=alt.Axis(title="Percentage delayed", format=".0%")
+            ),
+        )
+        .properties(width=700, height=400)
+        .configure_axis(grid=False, domain=True)
+    )
+
+    st.altair_chart(chart)
+
+with col[2]:
+    st.write("placeholder")
