@@ -1,5 +1,5 @@
 import pytest
-from extract import load_row_from_csv
+from .extract import load_row_from_csv
 import os
 
 
