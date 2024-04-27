@@ -1,7 +1,8 @@
 """Extract script for the station_performance pipeline."""
 
-from datetime import date
 import csv
+from datetime import date
+
 import requests
 from requests.auth import HTTPBasicAuth
 
