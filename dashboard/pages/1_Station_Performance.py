@@ -1,4 +1,4 @@
-from datetime import timedelta, date, datetime
+from datetime import datetime
 
 import streamlit as st
 import data_access as data
@@ -6,7 +6,7 @@ import altair as alt
 import pandas as pd
 
 st.set_page_config(
-    page_title="RailGuard: CheckUrChoo",
+    page_title="RailWatch",
     page_icon="🚆",
     layout="wide",
     initial_sidebar_state="expanded",
@@ -15,25 +15,11 @@ st.set_page_config(
 alt.themes.enable("dark")
 
 with st.sidebar:
-    st.title("🚉 Station Performance Dashboard")
+    st.title("Station Performance Dashboard")
 
     stations = data.get_station_names()
 
-    selected_station = st.selectbox("Select a station", stations, index=0)
-
-    color_theme_list = [
-        "blues",
-        "cividis",
-        "greens",
-        "inferno",
-        "magma",
-        "plasma",
-        "reds",
-        "rainbow",
-        "turbo",
-        "viridis",
-    ]
-    selected_color_theme = st.selectbox("Select a color theme", color_theme_list)
+    selected_station = st.selectbox("Select a station:", stations, index=0)
 
     df_arrivals = data.get_arrivals_for_station(selected_station)
 

@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 
 st.set_page_config(
-    page_title="RailGuard: CheckUrChoo",
+    page_title="RailWatch",
     page_icon="🚆",
 )
 

@@ -1,34 +1,30 @@
 import streamlit as st
 
 st.set_page_config(
-    page_title="RailGuard: CheckUrChoo",
+    page_title="RailWatch",
     page_icon="🚆",
+    layout="wide",
+    initial_sidebar_state="expanded",
 )
 
 # Page title
-st.title("RailGuard: Check A Choo")
+st.title("RailWatch: The Train Station Tracker")
 
 # Main section
 st.header("Welcome!")
 
-st.write(
-    "Streamlit is an open-source Python library that makes it easy to create web apps for machine learning, data exploration, and more. With Streamlit, you can build interactive and beautiful applications with only a few lines of code."
-)
-
 st.markdown(
     """
-    Streamlit is an open-source app framework built specifically for
-    Machine Learning and Data Science projects.
-    **👈 Select a demo from the sidebar** to see some examples
-    of what Streamlit can do!
-    ### Want to learn more?
-    - Check out [streamlit.io](https://streamlit.io)
-    - Jump into our [documentation](https://docs.streamlit.io)
-    - Ask a question in our [community
-        forums](https://discuss.streamlit.io)
-    ### See more complex demos
-    - Use a neural net to [analyze the Udacity Self-driving Car Image
-        Dataset](https://github.com/streamlit/demo-self-driving)
-    - Explore a [New York City rideshare dataset](https://github.com/streamlit/demo-uber-nyc-pickups)
+    RailWatch (final name TBD!) uses a combination of real-time public data sources to provide
+    automated cancellation and delay tracking. You can use RailWatch to track changes in performance
+    at a station over time, see which hour of the day has the most delays, find disruption and maintenance info
+    at a glance, and more. You can also sign up to our email and SMS alerting system to receive automated alerts
+    the moment an incident occurs for your chosen operator and/or station.
+
+    ### Where do we source our data?
+    - [The Realtime Trains API](https://api.rtt.io/)
+    - [The National Rail Knowledgebase Feed](https://www.nationalrail.co.uk/developers/)
+    ### Find out more
+    - Check out our development progress on [GitHub](https://github.com/adamski201/Railway-Tracker).
 """
 )
