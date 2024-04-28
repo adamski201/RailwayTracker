@@ -1,5 +1,7 @@
 """Contains SQL queries for the archiving process"""
 
+# todo - change interval back to 7 day
+
 # Station_performance queries
 S_DELAYS = """
 SELECT
@@ -7,7 +9,7 @@ SELECT
 FROM
     arrivals
 WHERE
-    arrivals.scheduled_arrival < CURRENT_DATE - INTERVAL '7 days'
+    arrivals.scheduled_arrival < CURRENT_DATE - INTERVAL '1 days'
         AND
     arrivals.actual_arrival > arrivals.scheduled_arrival
 GROUP BY
@@ -22,7 +24,7 @@ SELECT
 FROM
     arrivals
 WHERE
-    arrivals.scheduled_arrival < CURRENT_DATE - INTERVAL '7 days'
+    arrivals.scheduled_arrival < CURRENT_DATE - INTERVAL '1 days'
         AND
     arrivals.actual_arrival > arrivals.scheduled_arrival + INTERVAL '5 minutes'
 GROUP BY
@@ -38,7 +40,7 @@ SELECT
 FROM
     arrivals
 WHERE
-    arrivals.scheduled_arrival < CURRENT_DATE - INTERVAL '7 days'
+    arrivals.scheduled_arrival < CURRENT_DATE - INTERVAL '1 days'
         AND
     arrivals.actual_arrival > arrivals.scheduled_arrival
 GROUP BY
@@ -53,7 +55,7 @@ SELECT
 FROM
     arrivals
 WHERE
-    arrivals.scheduled_arrival < CURRENT_DATE - INTERVAL '7 days'
+    arrivals.scheduled_arrival < CURRENT_DATE - INTERVAL '1 days'
 GROUP BY
     arrivals.station_id, day
 ORDER BY
@@ -66,14 +68,14 @@ SELECT
 FROM
     cancellations
 WHERE
-    cancellations.scheduled_arrival < CURRENT_DATE - INTERVAL '7 days'
+    cancellations.scheduled_arrival < CURRENT_DATE - INTERVAL '1 days'
 GROUP BY
     cancellations.station_id, day
 ORDER BY
     day, cancellations.station_id ASC;
 """
 
-S_COMMON_CANCELLATION = """
+S_FREQ_CANCEL_ID = """
 WITH
     cancellation_counts
         AS 
@@ -84,7 +86,7 @@ WITH
             FROM
                 cancellations
             WHERE
-                cancellations.scheduled_arrival < CURRENT_DATE - INTERVAL '7 days'
+                cancellations.scheduled_arrival < CURRENT_DATE - INTERVAL '1 days'
             GROUP BY
                 cancellations.station_id, day, cancellations.cancellation_type_id
         ),
@@ -122,7 +124,7 @@ INNER JOIN
 WHERE 
     arrivals.actual_arrival>arrivals.scheduled_arrival
         AND
-    arrivals.scheduled_arrival < CURRENT_DATE - INTERVAL '7 days'
+    arrivals.scheduled_arrival < CURRENT_DATE - INTERVAL '6 days'
 GROUP BY 
     operators.operator_id, day
 ORDER BY 
@@ -141,7 +143,7 @@ INNER JOIN
 WHERE
     arrivals.actual_arrival > arrivals.scheduled_arrival + INTERVAL '5 minutes'
 AND
-    arrivals.scheduled_arrival < CURRENT_DATE - INTERVAL '7 days'
+    arrivals.scheduled_arrival < CURRENT_DATE - INTERVAL '6 days'
 GROUP BY 
     operators.operator_id, day
 ORDER BY 
@@ -161,7 +163,7 @@ INNER JOIN
 WHERE 
     arrivals.actual_arrival > arrivals.scheduled_arrival
         AND 
-    arrivals.scheduled_arrival < CURRENT_DATE - INTERVAL '7 days'
+    arrivals.scheduled_arrival < CURRENT_DATE - INTERVAL '6 days'
 GROUP BY 
     operators.operator_id, day
 ORDER BY 
@@ -178,7 +180,7 @@ INNER JOIN
 INNER JOIN 
     operators ON services.operator_id = operators.operator_id
 WHERE 
-    arrivals.scheduled_arrival < CURRENT_DATE - INTERVAL '7 days'
+    arrivals.scheduled_arrival < CURRENT_DATE - INTERVAL '6 days'
 GROUP BY 
     operators.operator_id, day
 ORDER BY 
@@ -195,14 +197,14 @@ INNER JOIN
 INNER JOIN 
     operators ON services.operator_id = operators.operator_id
 WHERE 
-    cancellations.scheduled_arrival < CURRENT_DATE - INTERVAL '7 days'
+    cancellations.scheduled_arrival < CURRENT_DATE - INTERVAL '6 days'
 GROUP BY 
     operators.operator_id, day
 ORDER BY 
     day, operators.operator_id ASC;
 """
 
-O_COMMON_CANCELLATION = """
+O_FREQ_CANCEL_ID = """
 WITH 
     cancellation_counts 
         AS 
@@ -218,7 +220,7 @@ WITH
             INNER JOIN
                 operators ON services.operator_id = operators.operator_id
             WHERE
-                cancellations.scheduled_arrival < CURRENT_DATE - INTERVAL '7 days'
+                cancellations.scheduled_arrival < CURRENT_DATE - INTERVAL '6 days'
             GROUP BY
                 operators.operator_id, day, cancellations.cancellation_type_id
         ),
@@ -239,4 +241,22 @@ WHERE
     rank = 1
 ORDER BY
     operator_id, day, cancellation_type_id;
+"""
+
+# Insert queries
+
+INSERT_STATION_PERFORMANCE = """
+INSERT INTO 
+    historical_data.station_performance 
+    (station_id, day, delay_1m_count, delay_5m_count, avg_delay, arrival_count, cancellation_count, common_cancel_code) 
+VALUES
+    (%s, %s, %s, %s, %s, %s, %s, %s);
+"""
+
+INSERT_OPERATOR_PERFORMANCE = """
+INSERT INTO 
+    historical_data.operator_performance 
+    (operator_id, day, delay_1m_count, delay_5m_count, avg_delay, arrival_count, cancellation_count, common_cancel_code) 
+VALUES 
+(%s, %s, %s, %s, %s, %s, %s, %s);
 """
