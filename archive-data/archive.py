@@ -1,19 +1,20 @@
 """This file is responsible for moving the historical data from
-the short-term storage (AWS RDS) to the long-term storage (S3 bucket)"""
+the short-term storage to the long-term storage"""
 
-from datetime import datetime
+from functools import reduce
 from os import environ as ENV
 
-from boto3 import client
-from botocore import client as boto3_client
 from dotenv import load_dotenv
 from psycopg2 import connect
 from psycopg2.extras import RealDictCursor
 from psycopg2.extensions import connection
 import pandas as pd
 
-from archive_queries import DELAYS_PER_DAY, DELAYS_PER_DAY_OVER_5_MIN
+from archive_queries import S_DELAYS, S_DELAYS_OVER_5_MIN, S_AVG_DELAY, S_TOTAL_ARRIVALS, S_TOTAL_CANCELLATIONS, \
+    S_FREQ_CANCEL_ID, O_DELAYS, O_DELAYS_OVER_5_MIN, O_AVG_DELAY, O_TOTAL_ARRIVALS, O_TOTAL_CANCELLATIONS, \
+    O_FREQ_CANCEL_ID, INSERT_STATION_PERFORMANCE, INSERT_OPERATOR_PERFORMANCE
 
+ARCHIVE_SCHEMA = "historical_data"
 
 def get_db_connection(config: dict[str, str]) -> connection:
     """Returns a connection to a database"""
@@ -28,67 +29,124 @@ def get_db_connection(config: dict[str, str]) -> connection:
     )
 
 
-def get_s3_client(config: dict[str, str]) -> boto3_client:
-    """Returns an S3 client with the provided credentials."""
+def close_connection(conn: connection) -> None:
+    """Closes the connection to the database"""
 
-    return client("s3",
-                  aws_access_key_id=config["AWS_ACCESS_KEY_ID"],
-                  aws_secret_access_key=config["AWS_SECRET_ACCESS_KEY"])
+    conn.close()
 
 
-def query_database(conn: connection, query: str) -> pd.DataFrame:
-    """Fetches historical older than a week from the database
-    and resets the table"""
+def fetch_and_delete_data(conn: connection, fetch_query: str) -> pd.DataFrame:  # todo - add delete_query: str
+    """Fetches historical data based on the fetch_query
+    and then deletes the fetched data using the delete_query.
+    Returns the fetched data as a DataFrame"""
 
-    with conn.cursor() as cur:
-        cur.execute(query)
-        rows = cur.fetchall()
-        # reset tables
+    try:
+        with conn.cursor() as cur:
 
-    conn.commit()
+            cur.execute(fetch_query)
+            rows = cur.fetchall()
+            # reset tables
+        conn.commit()
+        return pd.DataFrame(rows)
 
-    return pd.DataFrame(rows)
-
-
-def get_station_performance():
-    pass
-
-
-def get_operator_performance():
-    pass
+    except Exception as e:
+        conn.rollback()
+        print(f"An error occurred: {e}")
 
 
-def add_archive_to_db(schema: str, data):
-    pass
+def get_stations_performance(conn: connection, queries: list[str]) -> pd.DataFrame:
+    """Fetches the historical data for the stations based on the queries"""
+
+    performance_data = []  # list for adding the dataframes
+
+    for query in queries:
+        result = fetch_and_delete_data(conn, query)
+        if result is not None:
+            performance_data.append(result)
+
+    # combines the dataframes
+    return reduce(lambda left, right: pd.merge(left, right, on=['day', 'station_id'], how='outer'), performance_data)
 
 
-def add_csv_to_bucket(aws_client: boto3_client, filename: str, bucket: str, object_name: str) -> None:
-    """Uploads csv into an S3 bucket"""
+def get_operators_performance(conn: connection, queries: list[str]) -> pd.DataFrame:
+    """Fetches the historical data for the operators based on the queries"""
 
-    aws_client.upload_file(filename, bucket, object_name)
+    performance_data = []  # list for adding the dataframes
+
+    for query in queries:
+        result = fetch_and_delete_data(conn, query)
+        if result is not None:
+            performance_data.append(result)
+
+    # combines the dataframes
+    return reduce(lambda left, right: pd.merge(left, right, on=['day', 'operator_id'], how='outer'), performance_data)
+
+
+def clean_data(data: pd.DataFrame) -> pd.DataFrame:
+    """Cleans the data by converting the columns to the
+    correct data types and filling in the missing values"""
+
+    data['day'] = pd.to_datetime(data['day'])
+    data['delay_1m_count'] = data['delay_1m_count'].fillna(0).astype(int)
+    data['delay_5m_count'] = data['delay_5m_count'].fillna(0).astype(int)
+    data['avg_delay_min'] = data['avg_delay_min'].fillna(0).astype(int)
+    data['cancellation_count'] = data['cancellation_count'].fillna(0).astype(int)
+    data['common_cancel_code_id'] = data['common_cancel_code_id'].astype('Int64')  # fixme: temp solution for null ids
+
+    return data
+
+
+def convert_to_list(df: str) -> list[tuple]:
+    """Converts a DataFrame to a list of tuples"""
+
+    return df.to_records(index=False).tolist()
+
+
+def add_to_db(conn: connection, data: list[tuple], schema: str, query: str) -> None:
+    """Adds the data to the database"""
+
+    try:
+        with conn.cursor() as cur:
+
+            test = [(101, '2024-04-19', 120, 30, 3.50, 1024, 15, 'AB')]
+
+            cur.executemany(query, ["(1, '2021-01-01', 1, 1, 1, 1, 1, 1)"])  # todo - remove this line
+
+            # cur.executemany(query, data)
+
+        conn.commit()
+
+    except Exception as e:
+        conn.rollback()
+        print(f"An error occurred: {e}")
+
+def save_to_csv(data: pd.DataFrame, filename: str) -> None:
+    """Saves the data to a csv file
+    FOR DEBUGGING PURPOSES ONLY!
+    """
+
+    data.to_csv(filename, index=False)
+
+
 
 
 if __name__ == "__main__":
+    # todo - update queries and schema from 'common_cancel_code_id' to 'freq_cancel_id'
+
     load_dotenv()
 
     conn = get_db_connection(ENV)
 
-    s3_client = get_s3_client(ENV)
+    # todo - ask Dan if this is an inefficient way
+    station_queries = [S_DELAYS, S_DELAYS_OVER_5_MIN, S_AVG_DELAY, S_TOTAL_ARRIVALS, S_TOTAL_CANCELLATIONS, S_FREQ_CANCEL_ID]
+    operator_queries = [O_DELAYS, O_DELAYS_OVER_5_MIN, O_AVG_DELAY, O_TOTAL_ARRIVALS, O_TOTAL_CANCELLATIONS, O_FREQ_CANCEL_ID]
 
-    # query the database
-    historical_data_df_1 = query_database(conn, DELAYS_PER_DAY)
-    historical_data_df_2 = query_database(conn, DELAYS_PER_DAY_OVER_5_MIN)
+    stations_data = clean_data(get_stations_performance(conn, station_queries))
+    operators_data = clean_data(get_operators_performance(conn, operator_queries))
 
-    # combine the dataframes
-    combined_df = pd.merge(historical_data_df_1, historical_data_df_2, on=['station_name'], how='outer')
+    save_to_csv(stations_data, 'stations_data.csv')
+    # save_to_csv(operators_data, 'operators_data.csv')
 
-    # fixme - check for and fill missing values with 0??
-    combined_df.fillna(0, inplace=True)
+    add_to_db(conn, convert_to_list(stations_data), ARCHIVE_SCHEMA, INSERT_STATION_PERFORMANCE)
 
-    # Save to csv
-    # file = 'combined_station_delays.csv'
-    # if not combined_df.empty:
-    #     combined_df.to_csv(file, index=False)
-
-    # Upload back to rds
-    # add_csv_to_bucket(s3_client, file, ENV["S3_BUCKET"], file)
+    close_connection(conn)
