@@ -8,9 +8,9 @@ CREATE TABLE historical_data.station_performance(
     cancellation_count INT DEFAULT 0,
     delay_1m_count INT DEFAULT 0, 
     delay_5m_count INT DEFAULT 0, 
-    avg_delay DECIMAL(4,2) DEFAULT 0,
+    avg_delay_min DECIMAL(4,2) DEFAULT 0,
     arrival_count INT NOT NULL, 
-    common_cancel_code varchar(2) 
+    freq_cancellation_type_id INT REFERENCES public.cancellation_types(cancellation_type_id)
 );
 
 CREATE TABLE historical_data.operator_performance(
@@ -20,7 +20,7 @@ CREATE TABLE historical_data.operator_performance(
     cancellation_count INT DEFAULT 0,
     delay_1m_count INT DEFAULT 0, 
     delay_5m_count INT DEFAULT 0, 
-    avg_delay DECIMAL(4,2) DEFAULT 0,
+    avg_delay_min DECIMAL(4,2) DEFAULT 0,
     arrival_count INT NOT NULL, 
-    common_cancel_code varchar(2) 
+    freq_cancellation_type_id INT REFERENCES public.cancellation_types(cancellation_type_id)
 );
