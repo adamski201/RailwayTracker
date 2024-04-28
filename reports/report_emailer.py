@@ -1,46 +1,25 @@
-from dotenv import load_dotenv
-from os import environ as ENV
+from email.mime.text import MIMEText
+from email.mime.image import MIMEImage
+from email.mime.application import MIMEApplication
+from email.mime.multipart import MIMEMultipart
+from datetime import date
+import os
+
 
 import seaborn as sns
 import matplotlib.pyplot as plt
 import pandas as pd
 import psycopg2
-
-operator_delays_sql_query = """SELECT operators.operator_name, operators.operator_code,  COUNT(*) AS number_of_delays FROM arrivals
-                INNER JOIN services
-                ON arrivals.service_id=services.service_id
-                INNER JOIN operators
-                ON services.operator_id=operators.operator_id
-                WHERE arrivals.actual_arrival>arrivals.scheduled_arrival
-                GROUP BY operators.operator_name, operators.operator_code
-                ORDER BY operators.operator_name ASC
-                ;"""
-
-operator_arrivals_sql_query = """SELECT operators.operator_name, COUNT(*) AS total_arrivals FROM arrivals
-                                INNER JOIN services
-                                ON arrivals.service_id=services.service_id
-                                INNER JOIN operators
-                                ON services.operator_id=operators.operator_id
-                                GROUP BY operators.operator_name
-                                ORDER BY operators.operator_name ASC
-                                ;"""
-
-operator_cancellations_sql_query = """SELECT operators.operator_name, COUNT(*) AS total_cancellations FROM cancellations
-                                    INNER JOIN services
-                                    ON cancellations.service_id=services.service_id
-                                    INNER JOIN operators
-                                    ON services.operator_id=operators.operator_id
-                                    GROUP BY operators.operator_name
-                                    ORDER BY operators.operator_name ASC
-                                    ;"""
+from xhtml2pdf import pisa
+from boto3 import client
+from dotenv import load_dotenv
 
 
 def average_delay_per_hour_graph(conn: psycopg2.extensions.connection, station_crs: str) -> None:
-    """This function creates a matplotlib plot of the average delay time per hour for a 
-    station, given it's crs code.
+    """This function creates a matplotlib plot of the average delay time (for delayed trains)
+    per hour for a station, given it's crs code.
     This function saves a jpg image to the current directory named 'average_delay_per_hour_graph.jpg'.
-
-    _______"""
+    """
 
     sql_query = f"""SELECT  
                     EXTRACT(HOUR FROM arrivals.scheduled_arrival) AS hour, 
@@ -63,11 +42,13 @@ def average_delay_per_hour_graph(conn: psycopg2.extensions.connection, station_c
                 y=[i[1] for i in delays_per_hour_data])
     plt.xlabel("Hour of the Day")
     plt.ylabel("Average Delay Time")
+    plt.title("Average Delay Time for Delayed Trains")
 
     plt.savefig("average_delay_per_hour_graph.jpg")
 
 
-def get_station_name(conn: psycopg2.extensions.connection, station_crs: str):
+def get_station_name(conn: psycopg2.extensions.connection, station_crs: str) -> str:
+    """This functions returns the name of a station given it's crs code."""
 
     with conn.cursor() as cur:
         cur.execute(f"""SELECT station_name FROM stations
@@ -129,6 +110,8 @@ def get_average_delay_time(conn: psycopg2.extensions.connection, station_crs: st
                         INNER JOIN stations
                         ON stations.station_id=arrivals.station_id
                         WHERE stations.crs_code='{station_crs}'
+                        AND 
+                        arrivals.actual_arrival > arrivals.scheduled_arrival
                         ;"""
 
     with conn.cursor() as cur:
@@ -143,9 +126,12 @@ def get_most_common_cancellation_reasons(conn: psycopg2.extensions.connection, s
     type of cancellation and the number of cancellations at the station (inputted via it's
     crs code) due to that cancellation type. """
 
-    cancellation_reasons_query = """SELECT ct.cancellation_code, ct.description, COUNT(*) FROM cancellations
+    cancellation_reasons_query = f"""SELECT ct.cancellation_code, ct.description, COUNT(*) FROM cancellations
                 INNER JOIN cancellation_types AS ct
                 ON ct.cancellation_type_id=cancellations.cancellation_type_id
+                INNER JOIN stations 
+                ON stations.station_id=cancellations.station_id
+                WHERE stations.crs_code='{station_crs}'
                 GROUP BY ct.cancellation_code, ct.description
                 ORDER BY COUNT(*) DESC
                 LIMIT 5
@@ -174,7 +160,7 @@ def cancellation_types_pie_chart(conn: psycopg2.extensions.connection, station_c
     plt.savefig("cancellation_reason_pie_chart.jpg")
 
 
-def generate_html(conn: psycopg2.extensions.connection, station_crs: str):
+def generate_html(conn: psycopg2.extensions.connection, station_crs: str, html_path: str):
 
     delay_and_cancellation_percentages = get_delay_and_cancellation_percentages(
         conn, station_crs)
@@ -203,14 +189,14 @@ def generate_html(conn: psycopg2.extensions.connection, station_crs: str):
     </head>
     <body>
         <center>
-            <h1>Station Performance Report: : {station_name}</h1>
+            <h1>Station Performance Report: {station_name}</h1>
             <h2>Delay Information</h2>
             <p><b>Percentage of Delays</b>: {delay_and_cancellation_percentages["delay_percentage"]}%      |       <b>Average Delay Time</b>: {average_delay} Minutes</p>
-            <image><img  src="average_delay_per_hour_graph.jpg" alt="seaborn plot" style="width:400px;height:300px;"></image>
+            <img  src="average_delay_per_hour_graph.jpg" alt="seaborn plot" style="width:400px;height:300px;">
             <h2>Cancellation Information</h2>
             <p><b>Percentage of Cancellations</b>: {delay_and_cancellation_percentages["cancellation_percentage"]}%      |       <b>Most Common Cancellation Reason</b>: {cancellation_reasons[0][0]}</p>
 
-            <image><img  src="cancellation_reason_pie_chart.jpg" alt="seaborn plot" style="width:400px;height:300px;"></image>
+            <img  src="cancellation_reason_pie_chart.jpg" alt="seaborn plot" style="width:400px;height:300px;">
 
             <table>
                 <tr>
@@ -225,27 +211,100 @@ def generate_html(conn: psycopg2.extensions.connection, station_crs: str):
     </body>
 </html>"""
 
-    with open("pdf.html", "w") as f:
+    with open(html_path, "w") as f:
         f.write(html)
 
     return html
+
+
+def convert_html_to_pdf(source_html, output_filename):
+
+    # open output file for writing (truncated binary)
+    result_file = open(output_filename, "w+b")
+
+    # convert HTML to PDF
+    pisa_status = pisa.CreatePDF(
+        # the HTML to convert
+        src=source_html,
+        dest=result_file)           # file handle to recieve result
+
+    # close output file
+    result_file.close()                 # close output file
+
+    # return False on success and True on errors
+    return pisa_status.err
+
+
+def generate_email_object(subject: str, body: str, attachment_file_path: str):
+
+    msg = MIMEMultipart()
+    msg["Subject"] = subject
+    msg.attach(MIMEText(body))
+
+    file = MIMEApplication(
+        open(attachment_file_path, "rb").read(),
+        name=os.path.basename(attachment_file_path))
+
+    file['Content-Disposition'] = f'attachment; filename="{os.path.basename(attachment_file_path)}"'
+
+    msg.attach(file)
+
+    return msg
+
+
+def email_sender(email: MIMEMultipart, email_destinations: list[str]):
+
+    ses_client = client("ses",
+                        region_name="eu-west-2",
+                        aws_access_key_id=os.environ["AWS_ACCESS_KEY_ID"],
+                        aws_secret_access_key=os.environ["AWS_SECRET_ACCESS_KEY"])
+
+    ses_client.send_raw_email(
+        Source='trainee.isaac.schaessens.coleman@sigmalabs.co.uk',
+        Destinations=email_destinations,
+        RawMessage={
+            'Data': email.as_string()
+        }
+    )
 
 
 if __name__ == "__main__":
     load_dotenv()
 
     db_conn = psycopg2.connect(
-        database=ENV["DB_NAME"],
-        user=ENV["DB_USER"],
-        password=ENV["DB_PASS"],
-        host=ENV["DB_HOST"],
-        port=ENV["DB_PORT"],
+        database=os.environ["DB_NAME"],
+        user=os.environ["DB_USER"],
+        password=os.environ["DB_PASS"],
+        host=os.environ["DB_HOST"],
+        port=os.environ["DB_PORT"],
     )
 
-    station_crs = 'KTN'
+    # email_destinations = [
+    # "trainee.isaac.schaessens.coleman@sigmalabs.co.uk", "trainee.saniya.shaikh@sigmalabs.co.uk", "trainee.adam.osullivan@sigmalabs.co.uk",
+    # "trainee.ariba.syeda@sigmalabs.co.uk"]
 
-    html = generate_html(db_conn, station_crs)
+    email_destinations = ["trainee.isaac.schaessens.coleman@sigmalabs.co.uk"]
 
-    print(generate_html(db_conn, station_crs))
+    station_crs = "HML"
+
+    station_name = get_station_name(db_conn, station_crs)
+    html_file_name = f"{station_crs}_{date.today()}.html"
+
+    html = generate_html(db_conn, station_crs, html_file_name)
+
+    source_html = open(html_file_name, "r").read()
+    pdf_filepath = f"{station_crs}_{date.today()}.pdf"
+
+    convert_html_to_pdf(source_html, pdf_filepath)
+
+    subject = f"[TEST] {station_name} Station Performance Report"
+    body = f"Attached to this email is a report on the performance of {station_name} station."
+
+    print(station_name)
+
+    email_obj = generate_email_object(subject, body, pdf_filepath)
+
+    email_sender(email_obj, email_destinations)
+    print('email sent')
 
     db_conn.close()
