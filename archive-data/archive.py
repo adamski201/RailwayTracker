@@ -6,7 +6,7 @@ import logging
 from os import environ as ENV
 
 from dotenv import load_dotenv
-from psycopg2 import connect
+from psycopg2 import connect, Error
 from psycopg2.extras import RealDictCursor
 from psycopg2.extensions import connection
 import pandas as pd
@@ -42,23 +42,30 @@ def close_connection(conn: connection) -> None:
     conn.close()
 
 
-def fetch_and_delete_data(conn: connection, fetch_query: str) -> pd.DataFrame:  # todo - add delete_query: str
+def fetch_and_delete_data(conn: connection, fetch_query: str, delete_query: str) -> pd.DataFrame:
     """Fetches historical data based on the fetch_query
     and then deletes the fetched data using the delete_query.
     Returns the fetched data as a DataFrame"""
 
     try:
         with conn.cursor() as cur:
+            cur.execute("BEGIN;")
 
             cur.execute(fetch_query)
             rows = cur.fetchall()
-            # reset tables
-        conn.commit()
+
+            cur.execute(delete_query)
+
+            conn.commit()
         return pd.DataFrame(rows)
 
-    except Exception as err:
+    except psycopg2.Error as err:
         conn.rollback()
         logging.error("An error occurred: %s", err)
+        if err.pgcode:
+            logging.error("Error code: %s", err.pgcode)
+        if err.pgerror:
+            logging.error("Detailed error: %s", err.pgerror)
 
 
 def get_stations_performance(conn: connection, queries: list[str]) -> pd.DataFrame:
@@ -68,6 +75,7 @@ def get_stations_performance(conn: connection, queries: list[str]) -> pd.DataFra
 
     for query in queries:
         result = fetch_and_delete_data(conn, query)
+        print("done")
         if result is not None:
             performance_data.append(result)
 
@@ -82,6 +90,7 @@ def get_operators_performance(conn: connection, queries: list[str]) -> pd.DataFr
 
     for query in queries:
         result = fetch_and_delete_data(conn, query)
+        print("done")
         if result is not None:
             performance_data.append(result)
 
@@ -108,7 +117,7 @@ def convert_to_list(df: str) -> list[tuple]:
     return df.to_records(index=False).tolist()
 
 
-def add_to_db(conn: connection, data: list[tuple], query: str) -> None:
+def load_to_db(conn: connection, data: list[tuple], query: str) -> None:
     """Adds the data to the database"""
 
     try:
@@ -116,10 +125,13 @@ def add_to_db(conn: connection, data: list[tuple], query: str) -> None:
             cur.executemany(query, data)
         conn.commit()
 
-    except Exception as e:
+    except psycopg2.Error as err:
         conn.rollback()
-
-        print(f"An error occurred: {e}")
+        logging.error("An error occurred: %s", err)
+        if err.pgcode:
+            logging.error("Error code: %s", err.pgcode)
+        if err.pgerror:
+            logging.error("Detailed error: %s", err.pgerror)
 
 
 def save_to_csv(data: pd.DataFrame, filename: str) -> None:
@@ -135,17 +147,16 @@ if __name__ == "__main__":
 
     conn = get_db_connection(ENV)
 
-    # todo - ask Dan if this is an inefficient way
     station_queries = [S_DELAYS, S_DELAYS_OVER_5_MIN, S_AVG_DELAY, S_TOTAL_ARRIVALS, S_TOTAL_CANCELLATIONS]
     operator_queries = [O_DELAYS, O_DELAYS_OVER_5_MIN, O_AVG_DELAY, O_TOTAL_ARRIVALS, O_TOTAL_CANCELLATIONS]
 
     stations_data = clean_data(get_stations_performance(conn, station_queries))
     operators_data = clean_data(get_operators_performance(conn, operator_queries))
 
-    save_to_csv(stations_data, 'stations_data.csv')
-    save_to_csv(operators_data, 'operators_data.csv')
+    # save_to_csv(stations_data, 'stations_data.csv')
+    # save_to_csv(operators_data, 'operators_data.csv')
 
-    add_to_db(conn, convert_to_list(stations_data), INSERT_STATION_PERFORMANCE)
-    add_to_db(conn, convert_to_list(stations_data), INSERT_OPERATOR_PERFORMANCE)
+    load_to_db(conn, convert_to_list(stations_data), INSERT_STATION_PERFORMANCE)
+    load_to_db(conn, convert_to_list(stations_data), INSERT_OPERATOR_PERFORMANCE)
 
     close_connection(conn)
