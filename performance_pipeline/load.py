@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from psycopg2._psycopg import connection, cursor
 
-from entities import Arrival, Operator, Station, Service, Cancellation, CancellationType
+from .entities import Arrival, Operator, Station, Service, Cancellation, CancellationType
 
 
 def upload_arrivals(arrivals: list[Arrival], conn: connection) -> None:
