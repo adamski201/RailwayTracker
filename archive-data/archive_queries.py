@@ -9,7 +9,7 @@ SELECT
 FROM
     arrivals
 WHERE
-    arrivals.scheduled_arrival < CURRENT_DATE - INTERVAL '1 days'
+    arrivals.scheduled_arrival < CURRENT_DATE - INTERVAL '30 days'
         AND
     arrivals.actual_arrival > arrivals.scheduled_arrival
 GROUP BY
@@ -24,7 +24,7 @@ SELECT
 FROM
     arrivals
 WHERE
-    arrivals.scheduled_arrival < CURRENT_DATE - INTERVAL '1 days'
+    arrivals.scheduled_arrival < CURRENT_DATE - INTERVAL '30 days'
         AND
     arrivals.actual_arrival > arrivals.scheduled_arrival + INTERVAL '5 minutes'
 GROUP BY
@@ -40,7 +40,7 @@ SELECT
 FROM
     arrivals
 WHERE
-    arrivals.scheduled_arrival < CURRENT_DATE - INTERVAL '1 days'
+    arrivals.scheduled_arrival < CURRENT_DATE - INTERVAL '30 days'
         AND
     arrivals.actual_arrival > arrivals.scheduled_arrival
 GROUP BY
@@ -55,7 +55,7 @@ SELECT
 FROM
     arrivals
 WHERE
-    arrivals.scheduled_arrival < CURRENT_DATE - INTERVAL '1 days'
+    arrivals.scheduled_arrival < CURRENT_DATE - INTERVAL '30 days'
 GROUP BY
     arrivals.station_id, day
 ORDER BY
@@ -68,7 +68,7 @@ SELECT
 FROM
     cancellations
 WHERE
-    cancellations.scheduled_arrival < CURRENT_DATE - INTERVAL '1 days'
+    cancellations.scheduled_arrival < CURRENT_DATE - INTERVAL '30 days'
 GROUP BY
     cancellations.station_id, day
 ORDER BY
@@ -89,7 +89,7 @@ INNER JOIN
 WHERE 
     arrivals.actual_arrival>arrivals.scheduled_arrival
         AND
-    arrivals.scheduled_arrival < CURRENT_DATE - INTERVAL '6 days'
+    arrivals.scheduled_arrival < CURRENT_DATE - INTERVAL '30 days'
 GROUP BY 
     operators.operator_id, day
 ORDER BY 
@@ -108,7 +108,7 @@ INNER JOIN
 WHERE
     arrivals.actual_arrival > arrivals.scheduled_arrival + INTERVAL '5 minutes'
 AND
-    arrivals.scheduled_arrival < CURRENT_DATE - INTERVAL '6 days'
+    arrivals.scheduled_arrival < CURRENT_DATE - INTERVAL '30 days'
 GROUP BY 
     operators.operator_id, day
 ORDER BY 
@@ -128,7 +128,7 @@ INNER JOIN
 WHERE 
     arrivals.actual_arrival > arrivals.scheduled_arrival
         AND 
-    arrivals.scheduled_arrival < CURRENT_DATE - INTERVAL '6 days'
+    arrivals.scheduled_arrival < CURRENT_DATE - INTERVAL '30 days'
 GROUP BY 
     operators.operator_id, day
 ORDER BY 
@@ -145,7 +145,7 @@ INNER JOIN
 INNER JOIN 
     operators ON services.operator_id = operators.operator_id
 WHERE 
-    arrivals.scheduled_arrival < CURRENT_DATE - INTERVAL '6 days'
+    arrivals.scheduled_arrival < CURRENT_DATE - INTERVAL '30 days'
 GROUP BY 
     operators.operator_id, day
 ORDER BY 
@@ -162,7 +162,7 @@ INNER JOIN
 INNER JOIN 
     operators ON services.operator_id = operators.operator_id
 WHERE 
-    cancellations.scheduled_arrival < CURRENT_DATE - INTERVAL '6 days'
+    cancellations.scheduled_arrival < CURRENT_DATE - INTERVAL '30 days'
 GROUP BY 
     operators.operator_id, day
 ORDER BY 
@@ -189,16 +189,16 @@ VALUES
 
 # Delete queries
 
-DELETE_STATION_PERFORMANCE = """
+DELETE_OLD_ARRIVAL_DATA = """
 DELETE FROM 
-    archive.station_performance
+    arrivals
 WHERE 
-    day < CURRENT_DATE - INTERVAL '30 days';
+    scheduled_arrival < CURRENT_DATE - INTERVAL '30 days';
 """
 
-DELETE_STATION_PERFORMANCE = """
+DELETE_OLD_CANCELLATION_DATA = """
 DELETE FROM 
-    archive.operator_performance
+    cancellations
 WHERE 
-    day < CURRENT_DATE - INTERVAL '30 days';
+    scheduled_arrival < CURRENT_DATE - INTERVAL '30 days';
 """
