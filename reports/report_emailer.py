@@ -1,5 +1,6 @@
+"""A script that sends emails to all station subscribers."""
+
 from email.mime.text import MIMEText
-from email.mime.image import MIMEImage
 from email.mime.application import MIMEApplication
 from email.mime.multipart import MIMEMultipart
 from datetime import date
@@ -8,7 +9,6 @@ import os
 
 import seaborn as sns
 import matplotlib.pyplot as plt
-import pandas as pd
 import psycopg2
 from xhtml2pdf import pisa
 from boto3 import client
@@ -18,7 +18,8 @@ from dotenv import load_dotenv
 def average_delay_per_hour_graph(conn: psycopg2.extensions.connection, station_crs: str) -> None:
     """This function creates a matplotlib plot of the average delay time (for delayed trains)
     per hour for a station, given it's crs code.
-    This function saves a jpg image to the current directory named 'average_delay_per_hour_graph.jpg'.
+    This function saves a jpg image to the current directory named 
+    'average_delay_per_hour_graph.jpg'.
     """
 
     sql_query = f"""SELECT  
@@ -55,11 +56,14 @@ def get_station_name(conn: psycopg2.extensions.connection, station_crs: str) -> 
                     WHERE crs_code='{station_crs}'""")
         station_name = cur.fetchone()
 
-        if station_name:
-            return station_name[0]
+    if station_name:
+        return station_name[0]
+
+    return None
 
 
-def get_delay_and_cancellation_percentages(conn: psycopg2.extensions.connection, station_crs: str) -> dict:
+def get_delay_and_cancellation_percentages(conn: psycopg2.extensions.connection,
+                                           station_crs: str) -> dict:
     """This function returns the delay and cancellation percentages for a station, given its
     station's crs code."""
 
@@ -95,16 +99,18 @@ def get_delay_and_cancellation_percentages(conn: psycopg2.extensions.connection,
         num_of_delays[0])/(int(num_of_arrivals[0]+int(num_of_cancellations[0])))*100, 2)
 
     cancellation_percentage = round(int(
-        num_of_cancellations[0])/(int(num_of_arrivals[0]+int(num_of_cancellations[0])))*100, 2)
+        num_of_cancellations[0])/(int(num_of_arrivals[0]+int(num_of_cancellations[0])))*100,
+        2)
 
-    return {"delay_percentage": delay_percentage, "cancellation_percentage": cancellation_percentage}
+    return {"delay_percentage": delay_percentage,
+            "cancellation_percentage": cancellation_percentage}
 
 
 def get_average_delay_time(conn: psycopg2.extensions.connection, station_crs: str) -> float:
     """This function returns the average delay time for a station given the station's
     crs code."""
 
-    avg_delay_query = f"""SELECT 
+    avg_delay_query = f"""SELECT
                         ROUND(AVG((EXTRACT(EPOCH FROM (arrivals.actual_arrival - arrivals.scheduled_arrival)) / 60)), 2) AS average_delay_minutes 
                         FROM arrivals
                         INNER JOIN stations
@@ -121,12 +127,14 @@ def get_average_delay_time(conn: psycopg2.extensions.connection, station_crs: st
     return average_delay
 
 
-def get_most_common_cancellation_reasons(conn: psycopg2.extensions.connection, station_crs: str) -> list[tuple]:
+def get_most_common_cancellation_reasons(conn: psycopg2.extensions.connection,
+                                         station_crs: str) -> list[tuple]:
     """This function returns a list of tuples, where each tuple has information on a specific
     type of cancellation and the number of cancellations at the station (inputted via it's
     crs code) due to that cancellation type. """
 
-    cancellation_reasons_query = f"""SELECT ct.cancellation_code, ct.description, COUNT(*) FROM cancellations
+    cancellation_reasons_query = f"""SELECT ct.cancellation_code, ct.description, COUNT(*)
+                FROM cancellations
                 INNER JOIN cancellation_types AS ct
                 ON ct.cancellation_type_id=cancellations.cancellation_type_id
                 INNER JOIN stations 
@@ -144,8 +152,10 @@ def get_most_common_cancellation_reasons(conn: psycopg2.extensions.connection, s
     return cancellation_reasons
 
 
-def cancellation_types_pie_chart(conn: psycopg2.extensions.connection, station_crs: str):
-    """"""
+def cancellation_types_pie_chart(conn: psycopg2.extensions.connection, station_crs: str) -> None:
+    """This function creates a piec hart of the station's most common cancellation 
+    reasons. The function saves an image to the current directory with the file name
+    'cancellation_reason_pie_chart.jpg'. """
 
     cancellation_data = get_most_common_cancellation_reasons(conn, station_crs)
 
@@ -160,7 +170,10 @@ def cancellation_types_pie_chart(conn: psycopg2.extensions.connection, station_c
     plt.savefig("cancellation_reason_pie_chart.jpg")
 
 
-def generate_html(conn: psycopg2.extensions.connection, station_crs: str, html_path: str):
+def generate_html(conn: psycopg2.extensions.connection, station_crs: str, html_path: str) -> None:
+    """Given a station_crs code, this function saves a html file locally which produces a 
+    report on the corresponding station's delays and cancellations.
+    It is saved to the specified html_path."""
 
     delay_and_cancellation_percentages = get_delay_and_cancellation_percentages(
         conn, station_crs)
@@ -183,7 +196,7 @@ def generate_html(conn: psycopg2.extensions.connection, station_crs: str, html_p
         <td>{reason[2]}</td>
         </tr>"""
 
-    html = f"""<html> 
+    html = f"""<html>
     <head>
         <title>Station Performance Report: {station_name}</title>
     </head>
@@ -214,10 +227,11 @@ def generate_html(conn: psycopg2.extensions.connection, station_crs: str, html_p
     with open(html_path, "w") as f:
         f.write(html)
 
-    return html
 
-
-def convert_html_to_pdf(source_html, output_filename):
+def convert_html_to_pdf(source_html: str, output_filename: str) -> None:
+    """This function converts html a html string into a pdf
+    file saved in the current directory with the file name
+    assigned by the 'output_filename' argument."""
 
     # open output file for writing (truncated binary)
     result_file = open(output_filename, "w+b")
@@ -226,7 +240,7 @@ def convert_html_to_pdf(source_html, output_filename):
     pisa_status = pisa.CreatePDF(
         # the HTML to convert
         src=source_html,
-        dest=result_file)           # file handle to recieve result
+        dest=result_file)           # file handle to receive result
 
     # close output file
     result_file.close()                 # close output file
@@ -235,7 +249,9 @@ def convert_html_to_pdf(source_html, output_filename):
     return pisa_status.err
 
 
-def generate_email_object(subject: str, body: str, attachment_file_path: str):
+def generate_email_object(subject: str, body: str, attachment_file_path: str) -> MIMEMultipart:
+    """This function generates an email object given a subject, body,
+    and attachment file path."""
 
     msg = MIMEMultipart()
     msg["Subject"] = subject
@@ -252,7 +268,9 @@ def generate_email_object(subject: str, body: str, attachment_file_path: str):
     return msg
 
 
-def email_sender(email: MIMEMultipart, email_destinations: list[str]):
+def email_sender(email: MIMEMultipart, email_destinations: list[str]) -> None:
+    """This function sends an email via AWS SES. It accepts an email object (
+    i.e. what to email) and the addresses to email to."""
 
     ses_client = client("ses",
                         region_name="eu-west-2",
@@ -274,7 +292,7 @@ def group_email_subscribers(conn: psycopg2.extensions.connection) -> dict:
     report subscriber to that particular station as a values."""
 
     with conn.cursor() as cur:
-        cur.execute(f"""SELECT users.email, stations.crs_code FROM station_subscriptions AS ss
+        cur.execute("""SELECT users.email, stations.crs_code FROM station_subscriptions AS ss
                         INNER JOIN users ON
                         ss.user_id=users.user_id
                         INNER JOIN stations
@@ -307,7 +325,7 @@ def main(conn: psycopg2.extensions.connection):
         station_name = get_station_name(db_conn, station_crs)
         html_file_name = f"{station_crs}_{date.today()}.html"
 
-        html = generate_html(db_conn, station_crs, html_file_name)
+        generate_html(db_conn, station_crs, html_file_name)
 
         source_html = open(html_file_name, "r").read()
         pdf_filepath = f"{station_crs}_{date.today()}.pdf"
