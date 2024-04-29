@@ -1,6 +1,6 @@
 """Contains SQL queries for the archiving process"""
 
-# todo - change interval back to 7 day
+# todo - change interval back to 30 day
 
 # Station_performance queries
 S_DELAYS = """
@@ -73,41 +73,6 @@ GROUP BY
     cancellations.station_id, day
 ORDER BY
     day, cancellations.station_id ASC;
-"""
-
-S_FREQ_CANCEL_ID = """
-WITH
-    cancellation_counts
-        AS 
-        (
-            SELECT
-                cancellations.station_id, DATE(cancellations.scheduled_arrival) AS day,
-                cancellations.cancellation_type_id, COUNT(*) AS count
-            FROM
-                cancellations
-            WHERE
-                cancellations.scheduled_arrival < CURRENT_DATE - INTERVAL '1 days'
-            GROUP BY
-                cancellations.station_id, day, cancellations.cancellation_type_id
-        ),
-    ranked_cancellation_types
-        AS 
-        (
-            SELECT
-                station_id, day, cancellation_type_id, count,
-                RANK() OVER (PARTITION BY station_id, day ORDER BY count DESC) AS rank
-            FROM
-                cancellation_counts
-        )
-SELECT DISTINCT ON (station_id, day)
-    station_id, day,
-    cancellation_type_id AS common_cancel_code_id
-FROM
-    ranked_cancellation_types
-WHERE
-    rank = 1
-ORDER BY
-    station_id, day, cancellation_type_id;
 """
 
 # Operator_performance queries
@@ -204,59 +169,20 @@ ORDER BY
     day, operators.operator_id ASC;
 """
 
-O_FREQ_CANCEL_ID = """
-WITH 
-    cancellation_counts 
-        AS 
-        (
-            SELECT
-                operators.operator_id, DATE(cancellations.scheduled_arrival) AS day,
-                cancellations.cancellation_type_id,
-                COUNT(*) AS count
-            FROM
-                cancellations
-            INNER JOIN
-                services ON cancellations.service_id = services.service_id
-            INNER JOIN
-                operators ON services.operator_id = operators.operator_id
-            WHERE
-                cancellations.scheduled_arrival < CURRENT_DATE - INTERVAL '6 days'
-            GROUP BY
-                operators.operator_id, day, cancellations.cancellation_type_id
-        ),
-    ranked_cancellation_types 
-        AS 
-        (
-        SELECT
-            operator_id, day, cancellation_type_id, count,
-            RANK() OVER (PARTITION BY operator_id, day ORDER BY count DESC) AS rank
-        FROM
-            cancellation_counts
-        )
-SELECT DISTINCT ON (operator_id, day)
-    operator_id, day, cancellation_type_id AS common_cancel_code_id
-FROM
-    ranked_cancellation_types
-WHERE
-    rank = 1
-ORDER BY
-    operator_id, day, cancellation_type_id;
-"""
-
 # Insert queries
 
 INSERT_STATION_PERFORMANCE = """
 INSERT INTO 
-    historical_data.station_performance 
-    (station_id, day, delay_1m_count, delay_5m_count, avg_delay, arrival_count, cancellation_count, common_cancel_code) 
+    archive.station_performance 
+    (station_id, day, delay_1m_count, delay_5m_count, avg_delay_min, arrival_count, cancellation_count) 
 VALUES
-    (%s, %s, %s, %s, %s, %s, %s, %s);
+    (%s, %s, %s, %s, %s, %s, %s);
 """
 
 INSERT_OPERATOR_PERFORMANCE = """
 INSERT INTO 
-    historical_data.operator_performance 
-    (operator_id, day, delay_1m_count, delay_5m_count, avg_delay, arrival_count, cancellation_count, common_cancel_code) 
+    archive.operator_performance 
+    (operator_id, day, delay_1m_count, delay_5m_count, avg_delay_min, arrival_count, cancellation_count) 
 VALUES 
-(%s, %s, %s, %s, %s, %s, %s, %s);
+(%s, %s, %s, %s, %s, %s, %s);
 """
