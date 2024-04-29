@@ -268,6 +268,60 @@ def email_sender(email: MIMEMultipart, email_destinations: list[str]):
     )
 
 
+def group_email_subscribers(conn: psycopg2.extensions.connection) -> dict:
+    """This function returns a dictionary with station crs codes
+    as keys and a list of the email addresses of weekly email
+    report subscriber to that particular station as a values."""
+
+    with conn.cursor() as cur:
+        cur.execute(f"""SELECT users.email, stations.crs_code FROM station_subscriptions AS ss
+                        INNER JOIN users ON
+                        ss.user_id=users.user_id
+                        INNER JOIN stations
+                        ON ss.station_id=stations.station_id
+                        """)
+        recipient_details = cur.fetchall()
+
+    crs_address_dict = {}
+
+    for recipient in recipient_details:
+
+        crs_address_dict[recipient[1]] = crs_address_dict.get(
+            recipient[1], []) + [recipient[0]]
+
+    return crs_address_dict
+
+
+def main(conn: psycopg2.extensions.connection):
+    """This function emails all weekly report station 
+    subscribers."""
+
+    subscriber_groups = group_email_subscribers(conn)
+
+    for group in subscriber_groups.keys():
+
+        email_destinations = subscriber_groups[group]
+
+        station_crs = group
+
+        station_name = get_station_name(db_conn, station_crs)
+        html_file_name = f"{station_crs}_{date.today()}.html"
+
+        html = generate_html(db_conn, station_crs, html_file_name)
+
+        source_html = open(html_file_name, "r").read()
+        pdf_filepath = f"{station_crs}_{date.today()}.pdf"
+
+        convert_html_to_pdf(source_html, pdf_filepath)
+
+        subject = f"{station_name} Station Performance Report"
+        body = f"Attached to this email is a report on the performance of {station_name} station."
+
+        email_obj = generate_email_object(subject, body, pdf_filepath)
+
+        email_sender(email_obj, email_destinations)
+
+
 if __name__ == "__main__":
     load_dotenv()
 
@@ -279,32 +333,6 @@ if __name__ == "__main__":
         port=os.environ["DB_PORT"],
     )
 
-    # email_destinations = [
-    # "trainee.isaac.schaessens.coleman@sigmalabs.co.uk", "trainee.saniya.shaikh@sigmalabs.co.uk", "trainee.adam.osullivan@sigmalabs.co.uk",
-    # "trainee.ariba.syeda@sigmalabs.co.uk"]
-
-    email_destinations = ["trainee.isaac.schaessens.coleman@sigmalabs.co.uk"]
-
-    station_crs = "HML"
-
-    station_name = get_station_name(db_conn, station_crs)
-    html_file_name = f"{station_crs}_{date.today()}.html"
-
-    html = generate_html(db_conn, station_crs, html_file_name)
-
-    source_html = open(html_file_name, "r").read()
-    pdf_filepath = f"{station_crs}_{date.today()}.pdf"
-
-    convert_html_to_pdf(source_html, pdf_filepath)
-
-    subject = f"[TEST] {station_name} Station Performance Report"
-    body = f"Attached to this email is a report on the performance of {station_name} station."
-
-    print(station_name)
-
-    email_obj = generate_email_object(subject, body, pdf_filepath)
-
-    email_sender(email_obj, email_destinations)
-    print('email sent')
+    main(db_conn)
 
     db_conn.close()
