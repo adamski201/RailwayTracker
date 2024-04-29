@@ -109,6 +109,7 @@ def clean_data(data: pd.DataFrame) -> pd.DataFrame:
     data['delay_1m_count'] = data['delay_1m_count'].fillna(0).astype(int)
     data['delay_5m_count'] = data['delay_5m_count'].fillna(0).astype(int)
     data['avg_delay_min'] = data['avg_delay_min'].fillna(0).astype(int)
+    data['arrival_count'] = data['arrival_count'].fillna(0).astype(int)
     data['cancellation_count'] = data['cancellation_count'].fillna(0).astype(int)
 
     return data
@@ -124,7 +125,6 @@ def load_to_db(conn: connection, data: list[tuple], query: str) -> None:
     """Loads the data to the database using the query provided."""
 
     try:
-
         with conn.cursor() as cur:
             cur.executemany(query, data)
         conn.commit()
@@ -169,7 +169,7 @@ if __name__ == "__main__":
     operators_data = clean_data(get_operators_performance(conn, operator_queries))
 
     load_to_db(conn, convert_to_list(stations_data), INSERT_STATION_PERFORMANCE)
-    load_to_db(conn, convert_to_list(stations_data), INSERT_OPERATOR_PERFORMANCE)
+    load_to_db(conn, convert_to_list(operators_data), INSERT_OPERATOR_PERFORMANCE)
 
     deletion_queries = [DELETE_OLD_ARRIVAL_DATA, DELETE_OLD_CANCELLATION_DATA]
     delete_old_data(conn, deletion_queries)
