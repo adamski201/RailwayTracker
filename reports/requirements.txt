@@ -1,6 +1,0 @@
-xhtml2pdf
-seaborn
-python-dotenv
-psycopg2
-pandas
-boto3
