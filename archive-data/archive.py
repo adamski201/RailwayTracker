@@ -157,6 +157,33 @@ def delete_old_data(conn: connection, queries: list[str]):
             logging.error("Error code: %s", err.pgcode)
 
 
+def handler(event: dict = None, context: dict = None) -> dict:
+    """
+    Adds logic from main into handler to be used in lambda.
+    """
+
+    station_queries = [S_DELAYS, S_DELAYS_OVER_5_MIN, S_AVG_DELAY, S_TOTAL_ARRIVALS, S_TOTAL_CANCELLATIONS]
+    operator_queries = [O_DELAYS, O_DELAYS_OVER_5_MIN, O_AVG_DELAY, O_TOTAL_ARRIVALS, O_TOTAL_CANCELLATIONS]
+    deletion_queries = [DELETE_OLD_ARRIVAL_DATA, DELETE_OLD_CANCELLATION_DATA]
+
+    load_dotenv()
+    conn = get_db_connection(ENV)
+
+    stations_data = clean_data(get_stations_performance(conn, station_queries))
+    operators_data = clean_data(get_operators_performance(conn, operator_queries))
+
+    load_to_db(conn, convert_to_list(stations_data), INSERT_STATION_PERFORMANCE)
+    load_to_db(conn, convert_to_list(operators_data), INSERT_OPERATOR_PERFORMANCE)
+
+    delete_old_data(conn, deletion_queries)
+
+    close_connection(conn)
+
+    return {
+        "status": "Success!"
+    }
+
+
 if __name__ == "__main__":
     load_dotenv()
 
