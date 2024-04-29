@@ -2,6 +2,7 @@
 the short-term storage to the long-term storage"""
 
 from functools import reduce
+import logging
 from os import environ as ENV
 
 from dotenv import load_dotenv
@@ -13,6 +14,13 @@ import pandas as pd
 from archive_queries import S_DELAYS, S_DELAYS_OVER_5_MIN, S_AVG_DELAY, S_TOTAL_ARRIVALS, S_TOTAL_CANCELLATIONS, \
     O_DELAYS, O_DELAYS_OVER_5_MIN, O_AVG_DELAY, O_TOTAL_ARRIVALS, O_TOTAL_CANCELLATIONS, INSERT_STATION_PERFORMANCE, \
     INSERT_OPERATOR_PERFORMANCE
+
+
+def setup_logging() -> None:
+    """Sets up logging to the terminal"""
+
+    logging.basicConfig(level=logging.INFO,
+                        format='%(asctime)s:%(levelname)s:%(message)s')
 
 
 def get_db_connection(config: dict[str, str]) -> connection:
@@ -48,9 +56,9 @@ def fetch_and_delete_data(conn: connection, fetch_query: str) -> pd.DataFrame:  
         conn.commit()
         return pd.DataFrame(rows)
 
-    except Exception as e:
+    except Exception as err:
         conn.rollback()
-        print(f"An error occurred: {e}")
+        logging.error("An error occurred: %s", err)
 
 
 def get_stations_performance(conn: connection, queries: list[str]) -> pd.DataFrame:
@@ -105,36 +113,14 @@ def add_to_db(conn: connection, data: list[tuple], query: str) -> None:
 
     try:
         with conn.cursor() as cur:
-
-            # test = [(1, '2024-04-19', 120, 30, 3.50, 1024, 15),]
-
             cur.executemany(query, data)
-
         conn.commit()
 
     except Exception as e:
-
         conn.rollback()
 
         print(f"An error occurred: {e}")
 
-# ["(1, '2021-01-01', 1, 1, 1, 1, 1, 1)"]
-#
-# SELECT * FROM archive.station_performance;
-#
-# INSERT INTO
-#     archive.station_performance
-#     (station_id, day, delay_1m_count, delay_5m_count, avg_delay_min, arrival_count, cancellation_count)
-# VALUES
-# (1, '2021-01-01', 1, 1, 1, 1, 1.0);
-#
-# SELECT * FROM archive.operator_performance;
-#
-# INSERT INTO
-#     archive.operator_performance
-#     (operator_id, day, delay_1m_count, delay_5m_count, avg_delay_min, arrival_count, cancellation_count)
-# VALUES
-# (1, '2021-01-01', 1, 1, 1, 1, 1.0);
 
 def save_to_csv(data: pd.DataFrame, filename: str) -> None:
     """Saves the data to a csv file
@@ -157,10 +143,9 @@ if __name__ == "__main__":
     operators_data = clean_data(get_operators_performance(conn, operator_queries))
 
     save_to_csv(stations_data, 'stations_data.csv')
-    # save_to_csv(operators_data, 'operators_data.csv')
+    save_to_csv(operators_data, 'operators_data.csv')
 
     add_to_db(conn, convert_to_list(stations_data), INSERT_STATION_PERFORMANCE)
+    add_to_db(conn, convert_to_list(stations_data), INSERT_OPERATOR_PERFORMANCE)
 
     close_connection(conn)
-
-
