@@ -1,4 +1,4 @@
-"""This file is responsible for moving the historical data from
+"""This file is responsible for moving old data from
 the short-term storage to the long-term storage."""
 
 from functools import reduce
