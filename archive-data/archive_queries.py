@@ -186,3 +186,19 @@ INSERT INTO
 VALUES 
 (%s, %s, %s, %s, %s, %s, %s);
 """
+
+# Delete queries
+
+DELETE_STATION_PERFORMANCE = """
+DELETE FROM 
+    archive.station_performance
+WHERE 
+    day < CURRENT_DATE - INTERVAL '30 days';
+"""
+
+DELETE_STATION_PERFORMANCE = """
+DELETE FROM 
+    archive.operator_performance
+WHERE 
+    day < CURRENT_DATE - INTERVAL '30 days';
+"""
