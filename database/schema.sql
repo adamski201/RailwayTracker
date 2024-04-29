@@ -75,14 +75,14 @@ CREATE TABLE operator_subscriptions (
 CREATE TABLE incidents (
     incident_id SERIAL PRIMARY KEY,
     operator_id INT REFERENCES operators(operator_id),
+    incident_uuid VARCHAR(32) NOT NULL,
     creation_date TIMESTAMP NOT NULL,
-    description TEXT,
-    summary TEXT,
+    last_updated TIMESTAMP NOT NULL,
     start_date TIMESTAMP NOT NULL,
     end_date TIMESTAMP,
-    info_link TEXT,
+    is_planned BOOLEAN NOT NULL,
+    is_cleared BOOLEAN NOT NULL,
     affected_routes TEXT,
-    planned BOOLEAN NOT NULL,
-    incident_uuid VARCHAR(32) UNIQUE NOT NULL,
-    last_updated TIMESTAMP NOT NULL
+    summary TEXT NOT NULL,
+    info_link TEXT
 );
