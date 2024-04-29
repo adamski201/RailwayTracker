@@ -104,7 +104,8 @@ def get_delay_breakdown_for_station(
     FROM arrivals
     LEFT JOIN stations
     ON arrivals.station_id = stations.station_id
-    WHERE station_name = %s)
+    WHERE station_name = %s
+    AND scheduled_arrival >= DATE_TRUNC('day', NOW() - INTERVAL '%s day'))
     SELECT 
     CAST(date_trunc('hour', CAST(scheduled_arrival AS TIME)) + (floor(date_part('minute', CAST(scheduled_arrival AS TIME)) / 30) * interval '30 minute') AS TIME)  AS interval_start,
     ROUND((SUM(CASE WHEN EXTRACT(EPOCH FROM actual_arrival - scheduled_arrival)/60 >= %s THEN 1 ELSE 0 END) * 100.0 / COUNT(*)), 1) AS delay_percentage
@@ -122,8 +123,84 @@ def get_delay_breakdown_for_station(
     ORDER BY interval_start ASC;
     """
 
-    params = (station_name, delay_threshold, station_name, days_delta)
+    params = (station_name, days_delta, delay_threshold, station_name, days_delta)
 
     cur.execute(query, params)
 
     return pd.DataFrame(cur.fetchall(), columns=["interval_start", "pct_delayed"])
+
+
+def get_daily_stats(station_name: str, delay_threshold: int, days_delta: int = 30):
+    query = """
+    WITH total_cancellations AS (
+        SELECT
+            COUNT(*) AS cancellations,
+            DATE_TRUNC('day', scheduled_arrival) AS date
+        FROM cancellations
+        LEFT JOIN stations
+            ON cancellations.station_id = stations.station_id
+        WHERE station_name = %s
+        AND scheduled_arrival >= DATE_TRUNC('day', NOW() - INTERVAL '%s day')
+        GROUP BY date
+    ) SELECT total_delays.date AS date, arrivals, delays, cancellations
+    FROM (
+    SELECT
+        DATE_TRUNC('day', scheduled_arrival) AS date,
+        COUNT(*) AS arrivals,
+        SUM(CASE WHEN EXTRACT(EPOCH FROM actual_arrival - scheduled_arrival)/60 >= %s THEN 1 ELSE 0 END) AS delays
+    FROM arrivals
+    LEFT JOIN stations
+        ON arrivals.station_id = stations.station_id
+    WHERE station_name = %s
+    AND scheduled_arrival >= DATE_TRUNC('day', NOW() - INTERVAL '%s day')
+    GROUP BY date) AS total_delays
+    INNER JOIN total_cancellations
+    ON total_cancellations.date = total_delays.date;
+"""
+
+    params = (station_name, days_delta, delay_threshold, station_name, days_delta)
+
+    cur.execute(query, params)
+
+    return pd.DataFrame(
+        cur.fetchall(), columns=["date", "arrivals", "delays", "cancellations"]
+    )
+
+
+def get_current_incidents(station_name: str):
+    query = """
+    SELECT DISTINCT(incidents.*)
+    FROM incidents
+    LEFT JOIN operators
+    ON incidents.operator_id = operators.operator_id
+    LEFT JOIN services
+    ON operators.operator_id = services.operator_id
+    lEFT JOIN arrivals
+    ON services.service_id = arrivals.service_id
+    LEFT JOIN stations
+    ON arrivals.station_id = stations.station_id
+    WHERE station_name = %s
+    ORDER BY creation_date DESC;
+    """
+
+    params = (station_name,)
+
+    cur.execute(query, params)
+
+    return pd.DataFrame(
+        cur.fetchall(),
+        columns=[
+            "incident_id",
+            "operator_id",
+            "creation_date",
+            "description",
+            "summary",
+            "start_date",
+            "end_date",
+            "info_link",
+            "affected_routes",
+            "planned",
+            "incident_uuid",
+            "last_updated",
+        ],
+    )
