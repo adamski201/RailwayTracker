@@ -1,7 +1,5 @@
 """Contains SQL queries for the archiving process"""
 
-# todo - change interval back to 30 day
-
 # Station_performance queries
 S_DELAYS = """
 SELECT
