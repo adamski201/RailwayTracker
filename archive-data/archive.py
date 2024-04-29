@@ -11,10 +11,9 @@ from psycopg2.extensions import connection
 import pandas as pd
 
 from archive_queries import S_DELAYS, S_DELAYS_OVER_5_MIN, S_AVG_DELAY, S_TOTAL_ARRIVALS, S_TOTAL_CANCELLATIONS, \
-    S_FREQ_CANCEL_ID, O_DELAYS, O_DELAYS_OVER_5_MIN, O_AVG_DELAY, O_TOTAL_ARRIVALS, O_TOTAL_CANCELLATIONS, \
-    O_FREQ_CANCEL_ID, INSERT_STATION_PERFORMANCE, INSERT_OPERATOR_PERFORMANCE
+    O_DELAYS, O_DELAYS_OVER_5_MIN, O_AVG_DELAY, O_TOTAL_ARRIVALS, O_TOTAL_CANCELLATIONS, INSERT_STATION_PERFORMANCE, \
+    INSERT_OPERATOR_PERFORMANCE
 
-ARCHIVE_SCHEMA = "historical_data"
 
 def get_db_connection(config: dict[str, str]) -> connection:
     """Returns a connection to a database"""
@@ -86,12 +85,11 @@ def clean_data(data: pd.DataFrame) -> pd.DataFrame:
     """Cleans the data by converting the columns to the
     correct data types and filling in the missing values"""
 
-    data['day'] = pd.to_datetime(data['day'])
+    data['day'] = pd.to_datetime(data['day']).dt.date
     data['delay_1m_count'] = data['delay_1m_count'].fillna(0).astype(int)
     data['delay_5m_count'] = data['delay_5m_count'].fillna(0).astype(int)
     data['avg_delay_min'] = data['avg_delay_min'].fillna(0).astype(int)
     data['cancellation_count'] = data['cancellation_count'].fillna(0).astype(int)
-    data['common_cancel_code_id'] = data['common_cancel_code_id'].astype('Int64')  # fixme: temp solution for null ids
 
     return data
 
@@ -102,23 +100,41 @@ def convert_to_list(df: str) -> list[tuple]:
     return df.to_records(index=False).tolist()
 
 
-def add_to_db(conn: connection, data: list[tuple], schema: str, query: str) -> None:
+def add_to_db(conn: connection, data: list[tuple], query: str) -> None:
     """Adds the data to the database"""
 
     try:
         with conn.cursor() as cur:
 
-            test = [(101, '2024-04-19', 120, 30, 3.50, 1024, 15, 'AB')]
+            # test = [(1, '2024-04-19', 120, 30, 3.50, 1024, 15),]
 
-            cur.executemany(query, ["(1, '2021-01-01', 1, 1, 1, 1, 1, 1)"])  # todo - remove this line
-
-            # cur.executemany(query, data)
+            cur.executemany(query, data)
 
         conn.commit()
 
     except Exception as e:
+
         conn.rollback()
+
         print(f"An error occurred: {e}")
+
+# ["(1, '2021-01-01', 1, 1, 1, 1, 1, 1)"]
+#
+# SELECT * FROM archive.station_performance;
+#
+# INSERT INTO
+#     archive.station_performance
+#     (station_id, day, delay_1m_count, delay_5m_count, avg_delay_min, arrival_count, cancellation_count)
+# VALUES
+# (1, '2021-01-01', 1, 1, 1, 1, 1.0);
+#
+# SELECT * FROM archive.operator_performance;
+#
+# INSERT INTO
+#     archive.operator_performance
+#     (operator_id, day, delay_1m_count, delay_5m_count, avg_delay_min, arrival_count, cancellation_count)
+# VALUES
+# (1, '2021-01-01', 1, 1, 1, 1, 1.0);
 
 def save_to_csv(data: pd.DataFrame, filename: str) -> None:
     """Saves the data to a csv file
@@ -128,18 +144,14 @@ def save_to_csv(data: pd.DataFrame, filename: str) -> None:
     data.to_csv(filename, index=False)
 
 
-
-
 if __name__ == "__main__":
-    # todo - update queries and schema from 'common_cancel_code_id' to 'freq_cancel_id'
-
     load_dotenv()
 
     conn = get_db_connection(ENV)
 
     # todo - ask Dan if this is an inefficient way
-    station_queries = [S_DELAYS, S_DELAYS_OVER_5_MIN, S_AVG_DELAY, S_TOTAL_ARRIVALS, S_TOTAL_CANCELLATIONS, S_FREQ_CANCEL_ID]
-    operator_queries = [O_DELAYS, O_DELAYS_OVER_5_MIN, O_AVG_DELAY, O_TOTAL_ARRIVALS, O_TOTAL_CANCELLATIONS, O_FREQ_CANCEL_ID]
+    station_queries = [S_DELAYS, S_DELAYS_OVER_5_MIN, S_AVG_DELAY, S_TOTAL_ARRIVALS, S_TOTAL_CANCELLATIONS]
+    operator_queries = [O_DELAYS, O_DELAYS_OVER_5_MIN, O_AVG_DELAY, O_TOTAL_ARRIVALS, O_TOTAL_CANCELLATIONS]
 
     stations_data = clean_data(get_stations_performance(conn, station_queries))
     operators_data = clean_data(get_operators_performance(conn, operator_queries))
@@ -147,6 +159,8 @@ if __name__ == "__main__":
     save_to_csv(stations_data, 'stations_data.csv')
     # save_to_csv(operators_data, 'operators_data.csv')
 
-    add_to_db(conn, convert_to_list(stations_data), ARCHIVE_SCHEMA, INSERT_STATION_PERFORMANCE)
+    add_to_db(conn, convert_to_list(stations_data), INSERT_STATION_PERFORMANCE)
 
     close_connection(conn)
+
+
