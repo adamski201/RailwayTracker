@@ -157,14 +157,6 @@ def delete_old_data(conn: connection, queries: list[str]):
             logging.error("Error code: %s", err.pgcode)
 
 
-def save_to_csv(data: pd.DataFrame, filename: str) -> None:
-    """Saves the data to a csv file
-    FOR DEBUGGING PURPOSES ONLY!
-    """
-
-    data.to_csv(filename, index=False)
-
-
 if __name__ == "__main__":
     load_dotenv()
 
@@ -175,9 +167,6 @@ if __name__ == "__main__":
 
     stations_data = clean_data(get_stations_performance(conn, station_queries))
     operators_data = clean_data(get_operators_performance(conn, operator_queries))
-
-    save_to_csv(stations_data, 'stations_data.csv')
-    save_to_csv(operators_data, 'operators_data.csv')
 
     load_to_db(conn, convert_to_list(stations_data), INSERT_STATION_PERFORMANCE)
     load_to_db(conn, convert_to_list(stations_data), INSERT_OPERATOR_PERFORMANCE)
