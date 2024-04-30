@@ -1,19 +1,17 @@
-"""Test variables"""
+"""Test variables."""
+
 import pandas as pd
 
-OUTPUT_AFTER_PROCESSING_XML = [{'created_at': '2024-04-24T06:32:48.156Z',
-                                'last_updated': '2024-04-24T06:59:20.130Z',
-                                'operator_ref': 'VT',
-                                'operator_name': 'Avanti West Coast',
-                                'incident_number': 'DBE6100D741A4833932F597AFAFBDF86',
-                                'start_time': '2024-04-24T07:32:00.000+01:00',
-                                'end_time': None, 'planned': 'false',
-                                'info_link': 'Link',
-                                'routes_affected': 'Routes',
-                                'incident_priority': '1',
-                                'summary':
-                                'Major disruption at Birmingham New Street expected until 12:00',
-                                'description': 'A description.'}]
+OUTPUT_AFTER_PROCESSING_XML = {'created_at': '2024-04-24T06:32:48.156Z',
+                               'last_updated': '2024-04-24T06:59:20.130Z',
+                               'operator_ref': ['VT'],
+                               'operator_name': ['Avanti West Coast'],
+                               'incident_number': 'DBE6100D741A4833932F597AFAFBDF86',
+                               'start_time': '2024-04-24T07:32:00.000+01:00',
+                               'end_time': None, 'planned': 'false',
+                               'cleared': 'false', 'info_link': 'Link',
+                               'routes_affected': 'Routes', 'incident_priority': '1',
+                               'summary': 'Major disruption at Birmingham New Street expected until 12:00'}
 
 OUTPUT_AFTER_REPLACE = {'created_at': ['2024-04-24T06:32:48.156Z'],
                         'last_updated': ['2024-04-24T06:59:20.130Z'],
