@@ -86,32 +86,6 @@ def get_total_delays_for_station(
     return cur.fetchone()[0]
 
 
-def get_arrivals_for_station(
-    cur: cursor, station_name: str, days_delta: int
-) -> pd.DataFrame:
-    """
-    Gets selected information about individual arrivals at a station since the
-    provided number of days in the past.
-    """
-    cur.execute(
-        """
-        SELECT services.service_uid, scheduled_arrival, actual_arrival, operator_name, operator_code, station_name, crs_code
-        FROM arrivals
-        LEFT JOIN stations
-            ON arrivals.station_id = stations.station_id
-        LEFT JOIN services
-            ON arrivals.service_id = services.service_id
-        LEFT JOIN operators
-            ON services.service_id = operators.operator_id
-        WHERE station_name = %s
-        AND scheduled_arrival >= DATE_TRUNC('day', NOW() - INTERVAL '%s day')
-        """,
-        (station_name, days_delta),
-    )
-
-    return pd.DataFrame(cur.fetchall())
-
-
 def get_delay_breakdown_for_station(
     cur: cursor, station_name: str, delay_threshold: int, days_delta: int = 30
 ) -> pd.DataFrame:

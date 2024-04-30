@@ -19,7 +19,7 @@ from charts import (
 def calculate_yesterday_percent_delayed(station: str) -> float:
     """Returns the percentage of stations delayed yesterday for a station."""
     threshold = 5
-    n_delayed = data.get_total_delays_for_station(cur, threshold, station)
+    n_delayed = data.get_total_delays_for_station(cur, threshold, station, 1)
     return (100 * n_delayed) / (n_arrivals + n_cancelled)
 
 
@@ -64,8 +64,6 @@ if __name__ == "__main__":
 
         selected_station = st.selectbox("Select a station:", stations, index=4)
 
-        df_arrivals = data.get_arrivals_for_station(cur, selected_station)
-
     col = st.columns((1.25, 3.5, 3), gap="medium")
 
     with col[0]:
@@ -74,8 +72,8 @@ if __name__ == "__main__":
             unsafe_allow_html=True,
         )
 
-        n_arrivals = data.get_total_arrivals_for_station(cur, selected_station)
-        n_cancelled = data.get_total_cancellations_for_station(cur, selected_station)
+        n_arrivals = data.get_total_arrivals_for_station(cur, selected_station, 1)
+        n_cancelled = data.get_total_cancellations_for_station(cur, selected_station, 1)
         pct_cancelled = (100 * n_cancelled) / (n_arrivals + n_cancelled)
         color_cancelled = get_color_for_value(pct_cancelled)
 
