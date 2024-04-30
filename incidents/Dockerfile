@@ -1,5 +1,9 @@
 FROM python:latest
 
+ENV TZ=Europe/London
+
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
 COPY requirements.txt .
 
 RUN pip3 install -r requirements.txt
