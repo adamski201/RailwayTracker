@@ -1,18 +1,23 @@
+"""Contains functions for creating graphs for a streamlit dashboard."""
+
 import pandas as pd
 import altair as alt
-import vega
 
-colour_scale = alt.Scale(range=["#12783D", "#FFA500", "#DC143C"])
+scale = alt.Scale(
+    domain=[0, 0.10, 0.25, 1],
+    range=["green", "yellow", "red", "red"],  # Red for values above 20%
+)
 
 
-def make_donut(input_response, input_text, input_color):
+def make_donut(input_response: float, input_text: str, input_color: str):
+    """Creates a donut chart."""
     if input_color == "blue":
         chart_color = ["#29b5e8", "#155F7A"]
     elif input_color == "green":
         chart_color = ["#27AE60", "#12783D"]
     elif input_color == "orange":
         chart_color = ["#F39C12", "#875A12"]
-    elif input_color == "red":
+    else:
         chart_color = ["#E74C3C", "#781F16"]
 
     source = pd.DataFrame(
@@ -69,6 +74,7 @@ def make_donut(input_response, input_text, input_color):
 
 
 def make_delay_per_hour_chart(df: pd.DataFrame):
+    """Creates a bar chart showing delays per hour of the day."""
     return (
         alt.Chart(df)
         .mark_bar(cornerRadius=10)
@@ -78,55 +84,48 @@ def make_delay_per_hour_chart(df: pd.DataFrame):
                 axis=alt.Axis(title="Time of day", format="%I%p"),
             ),
             alt.Y(
-                "pct_delayed:Q", axis=alt.Axis(title="Percentage delayed", format=".0%")
+                "pct_delayed:Q",
+                axis=alt.Axis(title="Percentage delayed", format=".0%"),
+                scale=alt.Scale(domain=(0, 0.6)),
             ),
-            alt.Color("pct_delayed", legend=None, scale=colour_scale),
+            alt.Color("pct_delayed", legend=None, scale=scale),
         )
-        .properties(width=450, height=400)
+        .properties(width=450, height=320)
         .configure_axis(grid=False, domain=True)
     )
 
 
-def make_disruption_chart(df: pd.DataFrame, disruption_type: str):
-    if disruption_type == "Delay":
-        return (
-            alt.Chart(df)
-            .mark_bar(cornerRadius=3, size=20)
-            .encode(
-                alt.X(
-                    "date:O",
-                    timeUnit="yearmonthdate",
-                    axis=alt.Axis(title="Date", format="%d %b"),
-                ),
-                alt.Y("delays:Q", axis=alt.Axis(title="Volume of delays")),
-                alt.Color(
-                    "delays",
-                    legend=None,
-                    scale=alt.Scale(scheme="goldorange"),
-                ),
-            )
-            .properties(width=400, height=375)
-            .configure_axis(grid=False, domain=True)
+def make_delay_historical_chart(df: pd.DataFrame):
+    """Creates a bar chart showing historical trends for delays at a station."""
+    return (
+        alt.Chart(df)
+        .mark_bar(cornerRadius=3, size=20, color="orange")
+        .encode(
+            alt.X(
+                "date:O",
+                timeUnit="yearmonthdate",
+                axis=alt.Axis(title="Date", format="%d %b"),
+            ),
+            alt.Y("delays:Q", axis=alt.Axis(title="Volume of delays")),
         )
-    else:
-        return (
-            alt.Chart(df)
-            .mark_bar(size=20)
-            .encode(
-                alt.X(
-                    "date:O",
-                    timeUnit="yearmonthdate",
-                    axis=alt.Axis(title="Date", format="%d %b"),
-                ),
-                alt.Y(
-                    "cancellations:Q", axis=alt.Axis(title="Volume of cancellations")
-                ),
-                alt.Color(
-                    "cancellations",
-                    legend=None,
-                    scale=alt.Scale(scheme="goldorange"),
-                ),
-            )
-            .properties(width=400, height=375)
-            .configure_axis(grid=False, domain=True)
+        .properties(width=400, height=300)
+        .configure_axis(grid=False, domain=True)
+    )
+
+
+def make_cancellation_historical_chart(df: pd.DataFrame):
+    """Creates a bar chart showing historical trends for cancellations at a station."""
+    return (
+        alt.Chart(df)
+        .mark_bar(cornerRadius=3, size=20, color="orange")
+        .encode(
+            alt.X(
+                "date:O",
+                timeUnit="yearmonthdate",
+                axis=alt.Axis(title="Date", format="%d %b"),
+            ),
+            alt.Y("cancellations:Q", axis=alt.Axis(title="Volume of cancellations")),
         )
+        .properties(width=400, height=300)
+        .configure_axis(grid=False, domain=True)
+    )

@@ -4,7 +4,12 @@ import pandas as pd
 st.set_page_config(
     page_title="RailWatch",
     page_icon="🚆",
+    initial_sidebar_state="expanded",
 )
+
+with st.sidebar:
+    st.image("logo.png", use_column_width=True)
+
 
 # Dummy data for demonstration
 data = {
