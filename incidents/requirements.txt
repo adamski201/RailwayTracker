@@ -5,3 +5,4 @@ bs4
 pandas
 pytest
 psycopg2-binary
+boto3
