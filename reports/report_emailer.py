@@ -43,7 +43,7 @@ def average_delay_per_hour_graph(conn: psycopg2.extensions.connection, station_c
                 y=[i[1] for i in delays_per_hour_data])
     plt.xlabel("Hour of the Day")
     plt.ylabel("Average Delay Time")
-    plt.title("Average Delay Time for Delayed Trains")
+    plt.title("Average Delay Time for Delayed Trains (Past Week)")
 
     plt.savefig("average_delay_per_hour_graph.jpg")
 
@@ -153,7 +153,7 @@ def get_most_common_cancellation_reasons(conn: psycopg2.extensions.connection,
 
 
 def cancellation_types_pie_chart(conn: psycopg2.extensions.connection, station_crs: str) -> None:
-    """This function creates a piec hart of the station's most common cancellation 
+    """This function creates a pie chart of the station's most common cancellation 
     reasons. The function saves an image to the current directory with the file name
     'cancellation_reason_pie_chart.jpg'. """
 
@@ -278,7 +278,7 @@ def email_sender(email: MIMEMultipart, email_destinations: list[str]) -> None:
                         aws_secret_access_key=os.environ["AWS_SECRET_ACCESS_KEY"])
 
     ses_client.send_raw_email(
-        Source='trainee.isaac.schaessens.coleman@sigmalabs.co.uk',
+        Source=os.environ["SOURCE_EMAIL"],
         Destinations=email_destinations,
         RawMessage={
             'Data': email.as_string()
