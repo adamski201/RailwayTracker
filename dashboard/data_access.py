@@ -1,25 +1,12 @@
 import pandas as pd
-import psycopg2
-from psycopg2._psycopg import connection, cursor
+from psycopg2._psycopg import cursor
 from dotenv import load_dotenv
-from os import environ as ENV
-import psycopg2.extras
+
 
 load_dotenv()
 
-conn = psycopg2.connect(
-    database=ENV["DB_NAME"],
-    user=ENV["DB_USER"],
-    password=ENV["DB_PASS"],
-    host=ENV["DB_HOST"],
-    port=ENV["DB_PORT"],
-)
 
-
-cur = conn.cursor()
-
-
-def get_station_names() -> list[str]:
+def get_station_names(cur: cursor) -> list[str]:
     cur.execute(
         """
         SELECT station_name
@@ -31,7 +18,7 @@ def get_station_names() -> list[str]:
     return [x[0] for x in cur.fetchall()]
 
 
-def get_total_arrivals_for_station(station_name: str) -> int:
+def get_total_arrivals_for_station(cur: cursor, station_name: str) -> int:
     cur.execute(
         """
         SELECT COUNT(*)
@@ -46,7 +33,7 @@ def get_total_arrivals_for_station(station_name: str) -> int:
     return cur.fetchone()[0]
 
 
-def get_total_cancellations_for_station(station_name: str) -> int:
+def get_total_cancellations_for_station(cur: cursor, station_name: str) -> int:
     cur.execute(
         """
         SELECT COUNT(*)
@@ -61,7 +48,7 @@ def get_total_cancellations_for_station(station_name: str) -> int:
     return cur.fetchone()[0]
 
 
-def get_total_delays_for_station(threshold: int, station_name: str) -> int:
+def get_total_delays_for_station(cur: cursor, threshold: int, station_name: str) -> int:
     cur.execute(
         """
         SELECT COUNT(*)
@@ -77,7 +64,7 @@ def get_total_delays_for_station(threshold: int, station_name: str) -> int:
     return cur.fetchone()[0]
 
 
-def get_arrivals_for_station(station_name: str) -> pd.DataFrame:
+def get_arrivals_for_station(cur: cursor, station_name: str) -> pd.DataFrame:
     cur.execute(
         """
         SELECT services.service_uid, scheduled_arrival, actual_arrival, operator_name, operator_code, station_name, crs_code
@@ -96,7 +83,7 @@ def get_arrivals_for_station(station_name: str) -> pd.DataFrame:
 
 
 def get_delay_breakdown_for_station(
-    station_name: str, delay_threshold: int, days_delta: int = 30
+    cur: cursor, station_name: str, delay_threshold: int, days_delta: int = 30
 ):
     query = """
     WITH total_arrivals AS (
@@ -130,7 +117,9 @@ def get_delay_breakdown_for_station(
     return pd.DataFrame(cur.fetchall(), columns=["interval_start", "pct_delayed"])
 
 
-def get_daily_stats(station_name: str, delay_threshold: int, days_delta: int = 30):
+def get_daily_stats(
+    cur: cursor, station_name: str, delay_threshold: int, days_delta: int = 30
+):
     query = """
     WITH total_cancellations AS (
         SELECT
@@ -167,7 +156,7 @@ def get_daily_stats(station_name: str, delay_threshold: int, days_delta: int = 3
     )
 
 
-def get_current_incidents(station_name: str):
+def get_current_incidents(cur: cursor, station_name: str):
     query = """
     SELECT DISTINCT(incidents.*)
     FROM incidents
