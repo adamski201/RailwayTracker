@@ -1,0 +1,4 @@
+requests~=2.31.0
+python-dotenv~=1.0.1
+psycopg2~=2.9.9
+pytest~=8.1.2

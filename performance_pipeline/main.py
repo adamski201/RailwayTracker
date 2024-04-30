@@ -6,11 +6,13 @@ from os import environ as ENV
 import psycopg2
 from dotenv import load_dotenv
 
-from extract import (
-    fetch_train_services_data_for_station,
-)
+from extract import fetch_train_services_data_for_station, load_row_from_csv
 from load import upload_arrivals, upload_cancellations
 from transform import transform_train_services_data
+
+STATIONS_FILENAME = "stations.csv"
+
+DAY_DELTA = 1
 
 if __name__ == "__main__":
     load_dotenv()
@@ -23,9 +25,9 @@ if __name__ == "__main__":
         port=ENV["DB_PORT"],
     )
 
-    stations = ["BHM", "HML", "DEW", "PAD"]
+    date = date.today() - timedelta(days=DAY_DELTA)
 
-    date = date.today() - timedelta(days=1)
+    stations = load_row_from_csv(STATIONS_FILENAME)
 
     for station in stations:
         services = fetch_train_services_data_for_station(
@@ -38,7 +40,6 @@ if __name__ == "__main__":
         arrivals, cancellations = transform_train_services_data(services, date)
 
         upload_arrivals(conn=conn, arrivals=arrivals)
-
         upload_cancellations(conn=conn, cancellations=cancellations)
 
     conn.close()

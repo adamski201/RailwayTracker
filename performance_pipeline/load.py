@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from psycopg2._psycopg import connection, cursor
 
-from entities import Arrival, Operator, Station, Service, Cancellation, CancellationType
+from .entities import Arrival, Operator, Station, Service, Cancellation, CancellationType
 
 
 def upload_arrivals(arrivals: list[Arrival], conn: connection) -> None:
@@ -100,7 +100,7 @@ def upload_operator(conn: connection, cur: cursor, operator: Operator) -> int:
 
     conn.commit()
 
-    return cursor.fetchone()[0]
+    return cur.fetchone()[0]
 
 
 def get_station_id(cur: cursor, station: Station):
@@ -139,7 +139,7 @@ def upload_station(conn: connection, cur: cursor, station: Station) -> int:
 
     conn.commit()
 
-    return cursor.fetchone()[0]
+    return cur.fetchone()[0]
 
 
 def get_service_id(cur: cursor, service: Service):
