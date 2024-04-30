@@ -7,6 +7,7 @@ load_dotenv()
 
 
 def get_station_names(cur: cursor) -> list[str]:
+    """Retrieves station names from the database."""
     cur.execute(
         """
         SELECT station_name
@@ -18,7 +19,13 @@ def get_station_names(cur: cursor) -> list[str]:
     return [x[0] for x in cur.fetchall()]
 
 
-def get_total_arrivals_for_station(cur: cursor, station_name: str) -> int:
+def get_total_arrivals_for_station(
+    cur: cursor, station_name: str, days_delta: int
+) -> int:
+    """
+    Gets the total number of arrivals for a given station since the
+    provided number of days in the past.
+    """
     cur.execute(
         """
         SELECT COUNT(*)
@@ -26,14 +33,21 @@ def get_total_arrivals_for_station(cur: cursor, station_name: str) -> int:
         LEFT JOIN stations
             ON arrivals.station_id = stations.station_id
         WHERE stations.station_name LIKE %s
+        AND scheduled_arrival >= DATE_TRUNC('day', NOW() - INTERVAL '%s day')
         """,
-        (station_name,),
+        (station_name, days_delta),
     )
 
     return cur.fetchone()[0]
 
 
-def get_total_cancellations_for_station(cur: cursor, station_name: str) -> int:
+def get_total_cancellations_for_station(
+    cur: cursor, station_name: str, days_delta: int
+) -> int:
+    """
+    Gets the total number of cancellations for a given station since the
+    provided number of days in the past.
+    """
     cur.execute(
         """
         SELECT COUNT(*)
@@ -41,14 +55,21 @@ def get_total_cancellations_for_station(cur: cursor, station_name: str) -> int:
         LEFT JOIN stations
             ON cancellations.station_id = stations.station_id
         WHERE stations.station_name LIKE %s
+        AND scheduled_arrival >= DATE_TRUNC('day', NOW() - INTERVAL '%s day')
         """,
-        (station_name,),
+        (station_name, days_delta),
     )
 
     return cur.fetchone()[0]
 
 
-def get_total_delays_for_station(cur: cursor, threshold: int, station_name: str) -> int:
+def get_total_delays_for_station(
+    cur: cursor, threshold: int, station_name: str, days_delta: int
+) -> int:
+    """
+    Gets the total number of cancellations for a given station since the
+    provided number of days in the past.
+    """
     cur.execute(
         """
         SELECT COUNT(*)
@@ -57,14 +78,21 @@ def get_total_delays_for_station(cur: cursor, threshold: int, station_name: str)
             ON arrivals.station_id = stations.station_id
         WHERE stations.station_name LIKE %s
         AND EXTRACT(EPOCH FROM actual_arrival - scheduled_arrival)/60 > %s
+        AND scheduled_arrival >= DATE_TRUNC('day', NOW() - INTERVAL '%s day')
         """,
-        (station_name, threshold),
+        (station_name, threshold, days_delta),
     )
 
     return cur.fetchone()[0]
 
 
-def get_arrivals_for_station(cur: cursor, station_name: str) -> pd.DataFrame:
+def get_arrivals_for_station(
+    cur: cursor, station_name: str, days_delta: int
+) -> pd.DataFrame:
+    """
+    Gets selected information about individual arrivals at a station since the
+    provided number of days in the past.
+    """
     cur.execute(
         """
         SELECT services.service_uid, scheduled_arrival, actual_arrival, operator_name, operator_code, station_name, crs_code
@@ -75,8 +103,10 @@ def get_arrivals_for_station(cur: cursor, station_name: str) -> pd.DataFrame:
             ON arrivals.service_id = services.service_id
         LEFT JOIN operators
             ON services.service_id = operators.operator_id
-        WHERE station_name = %s""",
-        (station_name,),
+        WHERE station_name = %s
+        AND scheduled_arrival >= DATE_TRUNC('day', NOW() - INTERVAL '%s day')
+        """,
+        (station_name, days_delta),
     )
 
     return pd.DataFrame(cur.fetchall())
@@ -84,7 +114,12 @@ def get_arrivals_for_station(cur: cursor, station_name: str) -> pd.DataFrame:
 
 def get_delay_breakdown_for_station(
     cur: cursor, station_name: str, delay_threshold: int, days_delta: int = 30
-):
+) -> pd.DataFrame:
+    """
+    Gets a breakdown of delays grouped by half-hour of the day averaged over the number
+    of days specified in days_delta. The threshold for what is considered a delay is
+    provided by delay_threshold.
+    """
     query = """
     WITH total_arrivals AS (
     SELECT COUNT(*) as count
@@ -119,7 +154,11 @@ def get_delay_breakdown_for_station(
 
 def get_daily_stats(
     cur: cursor, station_name: str, delay_threshold: int, days_delta: int = 30
-):
+) -> pd.DataFrame:
+    """
+    Gets a summary of daily stats for a given station, including total arrivals,
+    cancellations, and delays, returning this information as a dataframe.
+    """
     query = """
     WITH total_cancellations AS (
         SELECT
@@ -157,6 +196,10 @@ def get_daily_stats(
 
 
 def get_current_incidents(cur: cursor, station_name: str):
+    """
+    Returns a dataframe listing all incidents for operators who operate trains
+    at the given station.
+    """
     query = """
     SELECT DISTINCT(incidents.*)
     FROM incidents
