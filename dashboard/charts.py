@@ -3,10 +3,7 @@
 import pandas as pd
 import altair as alt
 
-scale = alt.Scale(
-    domain=[0, 0.10, 0.25, 1],
-    range=["green", "yellow", "red", "red"],  # Red for values above 20%
-)
+scale = alt.Scale(domain=[0, 0.10, 0.25, 1], range=["green", "yellow", "red", "red"])
 
 
 def make_donut(input_response: float, input_text: str, input_color: str) -> alt.Chart:
@@ -95,7 +92,7 @@ def make_delay_per_hour_chart(df: pd.DataFrame) -> alt.Chart:
     )
 
 
-def make_delay_historical_chart(df: pd.DataFrame):
+def make_delay_historical_chart(df: pd.DataFrame) -> alt.Chart:
     """Creates a bar chart showing historical trends for delays at a station."""
     return (
         alt.Chart(df)
