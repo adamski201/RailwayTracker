@@ -9,7 +9,7 @@ scale = alt.Scale(
 )
 
 
-def make_donut(input_response: float, input_text: str, input_color: str):
+def make_donut(input_response: float, input_text: str, input_color: str) -> alt.Chart:
     """Creates a donut chart."""
     if input_color == "blue":
         chart_color = ["#29b5e8", "#155F7A"]
@@ -73,7 +73,7 @@ def make_donut(input_response: float, input_text: str, input_color: str):
     return plot_bg + plot + text
 
 
-def make_delay_per_hour_chart(df: pd.DataFrame):
+def make_delay_per_hour_chart(df: pd.DataFrame) -> alt.Chart:
     """Creates a bar chart showing delays per hour of the day."""
     return (
         alt.Chart(df)
@@ -113,7 +113,7 @@ def make_delay_historical_chart(df: pd.DataFrame):
     )
 
 
-def make_cancellation_historical_chart(df: pd.DataFrame):
+def make_cancellation_historical_chart(df: pd.DataFrame) -> alt.Chart:
     """Creates a bar chart showing historical trends for cancellations at a station."""
     return (
         alt.Chart(df)
