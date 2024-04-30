@@ -31,6 +31,8 @@ def average_delay_per_hour_graph(conn: psycopg2.extensions.connection, station_c
                     WHERE stations.crs_code='{station_crs}'
                     AND
                     arrivals.actual_arrival > arrivals.scheduled_arrival
+                    AND 
+                    arrivals.scheduled_arrival >= DATE_TRUNC('day', NOW() - INTERVAL '7 day')
                     GROUP BY hour
                     ; """
 
@@ -73,18 +75,24 @@ def get_delay_and_cancellation_percentages(conn: psycopg2.extensions.connection,
                         WHERE arrivals.actual_arrival>arrivals.scheduled_arrival
                         AND
                         stations.crs_code='{station_crs}'
+                        AND
+                        arrivals.scheduled_arrival >= DATE_TRUNC('day', NOW() - INTERVAL '7 day')
                         ;"""
 
     arrivals_num_query = f"""SELECT COUNT(*) FROM arrivals
                         INNER JOIN stations
                         ON arrivals.station_id=stations.station_id
                         WHERE stations.crs_code='{station_crs}'
+                        AND
+                        arrivals.scheduled_arrival >= DATE_TRUNC('day', NOW() - INTERVAL '7 day')
                         ;"""
 
     cancellations_num_query = f"""SELECT COUNT(*) FROM cancellations
                                 INNER JOIN stations
                                 ON cancellations.station_id=stations.station_id
                                 WHERE stations.crs_code='{station_crs}'
+                                AND
+                                cancellations.scheduled_arrival >= DATE_TRUNC('day', NOW() - INTERVAL '7 day')
                                 ;"""
 
     with conn.cursor() as cur:
@@ -118,6 +126,8 @@ def get_average_delay_time(conn: psycopg2.extensions.connection, station_crs: st
                         WHERE stations.crs_code='{station_crs}'
                         AND 
                         arrivals.actual_arrival > arrivals.scheduled_arrival
+                        AND
+                        arrivals.scheduled_arrival >= DATE_TRUNC('day', NOW() - INTERVAL '7 day')
                         ;"""
 
     with conn.cursor() as cur:
@@ -140,6 +150,8 @@ def get_most_common_cancellation_reasons(conn: psycopg2.extensions.connection,
                 INNER JOIN stations 
                 ON stations.station_id=cancellations.station_id
                 WHERE stations.crs_code='{station_crs}'
+                AND
+                cancellations.scheduled_arrival >= DATE_TRUNC('day', NOW() - INTERVAL '7 day')
                 GROUP BY ct.cancellation_code, ct.description
                 ORDER BY COUNT(*) DESC
                 LIMIT 5
@@ -163,7 +175,7 @@ def cancellation_types_pie_chart(conn: psycopg2.extensions.connection, station_c
 
     # plotting data on chart
     plt.clf()
-    plt.title("Most Common Cancellation Reasons")
+    plt.title("Most Common Cancellation Reasons (Past Week)")
     plt.pie([i[2] for i in cancellation_data], labels=[i[0]
             for i in cancellation_data], colors=palette_color, autopct='%1.1f%%')
 
