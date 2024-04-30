@@ -160,4 +160,10 @@ cython_debug/
 .idea/
 performance_pipeline/.idea/
 
-**/.DS_Store
+
+.DS_Store
+*.jpg
+*.html
+*.pdf
+*.csv
+
