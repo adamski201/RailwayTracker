@@ -1,7 +1,7 @@
 DROP TABLE IF EXISTS archive.station_performance;
 DROP TABLE IF EXISTS archive.operator_performance;
 
-CREATE TABLE historical_data.station_performance(
+CREATE TABLE archive.station_performance(
     station_performance_id SERIAL PRIMARY KEY,
     station_id INT REFERENCES public.stations(station_id),
     day DATE NOT NULL,
