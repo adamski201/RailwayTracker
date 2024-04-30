@@ -1,7 +1,6 @@
 import pandas as pd
-from psycopg2._psycopg import cursor
 from dotenv import load_dotenv
-
+from psycopg2._psycopg import cursor
 
 load_dotenv()
 
