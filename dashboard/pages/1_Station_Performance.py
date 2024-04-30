@@ -16,14 +16,14 @@ from charts import (
 )
 
 
-def calculate_yesterday_percent_delayed(station: str):
+def calculate_yesterday_percent_delayed(station: str) -> float:
     """Returns the percentage of stations delayed yesterday for a station."""
     threshold = 5
     n_delayed = data.get_total_delays_for_station(cur, threshold, station)
     return (100 * n_delayed) / (n_arrivals + n_cancelled)
 
 
-def get_color_for_value(value):
+def get_color_for_value(value) -> str:
     """Returns a colour in string format for a given value."""
     if value < 5:
         return "green"
