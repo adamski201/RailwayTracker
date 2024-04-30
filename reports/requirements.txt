@@ -1,0 +1,6 @@
+seaborn
+matplotlib
+psycopg2
+xhtml2pdf
+boto3
+python-dotenv
