@@ -31,7 +31,7 @@ jobs:
           pip install -r performance_pipeline/requirements.txt
           pylint performance_pipeline/*.py --ignore-patterns=test_ --fail-under=8.5
 
-            - name: Get changes to incidents
+      - name: Get changes to incidents
         id: changed-incidents
         uses: tj-actions/changed-files@v44
         with:
