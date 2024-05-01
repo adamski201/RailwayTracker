@@ -167,3 +167,11 @@ performance_pipeline/.idea/
 *.pdf
 *.csv
 
+
+# terraform
+.terraform
+*.tfvars
+*.tfstate
+*.lock.hcl
+*tfstate.backup
+
