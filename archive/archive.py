@@ -195,6 +195,9 @@ if __name__ == "__main__":
     stations_data = clean_data(get_stations_performance(conn, station_queries))
     operators_data = clean_data(get_operators_performance(conn, operator_queries))
 
+    stations_data.to_csv("stations_data.csv",  index=False, encoding='utf-8')
+    operators_data.to_csv("operators_data.csv", index=False, encoding='utf-8')
+
     load_to_db(conn, convert_to_list(stations_data), INSERT_STATION_PERFORMANCE)
     load_to_db(conn, convert_to_list(operators_data), INSERT_OPERATOR_PERFORMANCE)
 
