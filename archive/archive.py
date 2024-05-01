@@ -11,10 +11,10 @@ from psycopg2.extras import RealDictCursor
 from psycopg2.extensions import connection
 import pandas as pd
 
-from archive_queries import (S_DELAYS, S_DELAYS_OVER_5_MIN, S_AVG_DELAY, S_TOTAL_ARRIVALS, S_TOTAL_CANCELLATIONS,
-                             O_DELAYS, O_DELAYS_OVER_5_MIN, O_AVG_DELAY, O_TOTAL_ARRIVALS, O_TOTAL_CANCELLATIONS,
-                             INSERT_STATION_PERFORMANCE, INSERT_OPERATOR_PERFORMANCE,
-                             DELETE_OLD_ARRIVAL_DATA, DELETE_OLD_CANCELLATION_DATA)
+from sql_queries import (S_DELAYS, S_DELAYS_OVER_5_MIN, S_AVG_DELAY, S_TOTAL_ARRIVALS, S_TOTAL_CANCELLATIONS,
+                         O_DELAYS, O_DELAYS_OVER_5_MIN, O_AVG_DELAY, O_TOTAL_ARRIVALS, O_TOTAL_CANCELLATIONS,
+                         INSERT_STATION_PERFORMANCE, INSERT_OPERATOR_PERFORMANCE,
+                         DELETE_OLD_ARRIVAL_DATA, DELETE_OLD_CANCELLATION_DATA)
 
 
 class DataFetchError(Exception):
@@ -194,6 +194,9 @@ if __name__ == "__main__":
 
     stations_data = clean_data(get_stations_performance(conn, station_queries))
     operators_data = clean_data(get_operators_performance(conn, operator_queries))
+
+    stations_data.to_csv("stations_data.csv",  index=False, encoding='utf-8')
+    operators_data.to_csv("operators_data.csv", index=False, encoding='utf-8')
 
     load_to_db(conn, convert_to_list(stations_data), INSERT_STATION_PERFORMANCE)
     load_to_db(conn, convert_to_list(operators_data), INSERT_OPERATOR_PERFORMANCE)
