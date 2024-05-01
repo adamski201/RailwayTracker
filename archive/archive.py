@@ -11,10 +11,10 @@ from psycopg2.extras import RealDictCursor
 from psycopg2.extensions import connection
 import pandas as pd
 
-from archive_queries import (S_DELAYS, S_DELAYS_OVER_5_MIN, S_AVG_DELAY, S_TOTAL_ARRIVALS, S_TOTAL_CANCELLATIONS,
-                             O_DELAYS, O_DELAYS_OVER_5_MIN, O_AVG_DELAY, O_TOTAL_ARRIVALS, O_TOTAL_CANCELLATIONS,
-                             INSERT_STATION_PERFORMANCE, INSERT_OPERATOR_PERFORMANCE,
-                             DELETE_OLD_ARRIVAL_DATA, DELETE_OLD_CANCELLATION_DATA)
+from sql_queries import (S_DELAYS, S_DELAYS_OVER_5_MIN, S_AVG_DELAY, S_TOTAL_ARRIVALS, S_TOTAL_CANCELLATIONS,
+                         O_DELAYS, O_DELAYS_OVER_5_MIN, O_AVG_DELAY, O_TOTAL_ARRIVALS, O_TOTAL_CANCELLATIONS,
+                         INSERT_STATION_PERFORMANCE, INSERT_OPERATOR_PERFORMANCE,
+                         DELETE_OLD_ARRIVAL_DATA, DELETE_OLD_CANCELLATION_DATA)
 
 
 class DataFetchError(Exception):
