@@ -4,21 +4,50 @@ from email.mime.text import MIMEText
 from email.mime.application import MIMEApplication
 from email.mime.multipart import MIMEMultipart
 from datetime import date
-import os
-
+from os import makedirs, path, environ as ENV
+import logging
 
 import seaborn as sns
 import matplotlib.pyplot as plt
-import psycopg2
+from psycopg2 import connect
+from psycopg2.extensions import connection
 from xhtml2pdf import pisa
 from boto3 import client
 from dotenv import load_dotenv
 
+S3_BUCKET = 'railway-tracker'
 
-def average_delay_per_hour_graph(conn: psycopg2.extensions.connection, station_crs: str) -> None:
+
+def setup_logging() -> None:
+    """Sets up the logging configuration."""
+
+    logging.basicConfig(level=logging.INFO,
+                        format='%(asctime)s:%(levelname)s:%(message)s')
+
+
+def get_db_connection(config: dict[str, str]) -> connection:
+    """Returns a connection to a database."""
+
+    return connect(
+        host=config["DB_HOST"],
+        user=config["DB_USER"],
+        password=config["DB_PASS"],
+        dbname=config["DB_NAME"],
+        port=config["DB_PORT"],
+    )
+
+
+def get_s3_connection(config: dict[str, str]):
+    """Returns a connection to a s3 client."""
+
+    return client(
+        "s3", aws_access_key_id=config["ACCESS_KEY_ID"], aws_secret_access_key=config["SECRET_ACCESS_KEY"])
+
+
+def average_delay_per_hour_graph(conn: connection, station_crs: str) -> None:
     """This function creates a matplotlib plot of the average delay time (for delayed trains)
     per hour for a station, given it's crs code.
-    This function saves a jpg image to the current directory named 
+    This function saves a jpg image to the current directory named
     'average_delay_per_hour_graph.jpg'.
     """
 
@@ -41,16 +70,20 @@ def average_delay_per_hour_graph(conn: psycopg2.extensions.connection, station_c
         delays_per_hour_data = cur.fetchall()
 
     plt.clf()
+
     sns.barplot(x=[i[0] for i in delays_per_hour_data],
                 y=[i[1] for i in delays_per_hour_data])
+
     plt.xlabel("Hour of the Day")
+
     plt.ylabel("Average Delay Time")
+
     plt.title("Average Delay Time for Delayed Trains (Past Week)")
 
-    plt.savefig("average_delay_per_hour_graph.jpg")
+    plt.savefig(f"{ENV['LOCAL_FOLDER']}/average_delay_per_hour_graph.jpg")
 
 
-def get_station_name(conn: psycopg2.extensions.connection, station_crs: str) -> str:
+def get_station_name(conn: connection, station_crs: str) -> str:
     """This functions returns the name of a station given it's crs code."""
 
     with conn.cursor() as cur:
@@ -64,7 +97,7 @@ def get_station_name(conn: psycopg2.extensions.connection, station_crs: str) -> 
     return None
 
 
-def get_delay_and_cancellation_percentages(conn: psycopg2.extensions.connection,
+def get_delay_and_cancellation_percentages(conn: connection,
                                            station_crs: str) -> dict:
     """This function returns the delay and cancellation percentages for a station, given its
     station's crs code."""
@@ -104,17 +137,17 @@ def get_delay_and_cancellation_percentages(conn: psycopg2.extensions.connection,
         num_of_cancellations = cur.fetchone()
 
     delay_percentage = round(int(
-        num_of_delays[0])/(int(num_of_arrivals[0]+int(num_of_cancellations[0])))*100, 2)
+        num_of_delays[0]) / (int(num_of_arrivals[0] + int(num_of_cancellations[0]))) * 100, 2)
 
     cancellation_percentage = round(int(
-        num_of_cancellations[0])/(int(num_of_arrivals[0]+int(num_of_cancellations[0])))*100,
-        2)
+        num_of_cancellations[0]) / (int(num_of_arrivals[0] + int(num_of_cancellations[0]))) * 100,
+                                    2)
 
     return {"delay_percentage": delay_percentage,
             "cancellation_percentage": cancellation_percentage}
 
 
-def get_average_delay_time(conn: psycopg2.extensions.connection, station_crs: str) -> float:
+def get_average_delay_time(conn: connection, station_crs: str) -> float:
     """This function returns the average delay time for a station given the station's
     crs code."""
 
@@ -137,7 +170,7 @@ def get_average_delay_time(conn: psycopg2.extensions.connection, station_crs: st
     return average_delay
 
 
-def get_most_common_cancellation_reasons(conn: psycopg2.extensions.connection,
+def get_most_common_cancellation_reasons(conn: connection,
                                          station_crs: str) -> list[tuple]:
     """This function returns a list of tuples, where each tuple has information on a specific
     type of cancellation and the number of cancellations at the station (inputted via it's
@@ -164,8 +197,8 @@ def get_most_common_cancellation_reasons(conn: psycopg2.extensions.connection,
     return cancellation_reasons
 
 
-def cancellation_types_pie_chart(conn: psycopg2.extensions.connection, station_crs: str) -> None:
-    """This function creates a pie chart of the station's most common cancellation 
+def cancellation_types_pie_chart(conn: connection, station_crs: str) -> None:
+    """This function creates a pie chart of the station's most common cancellation
     reasons. The function saves an image to the current directory with the file name
     'cancellation_reason_pie_chart.jpg'. """
 
@@ -175,15 +208,18 @@ def cancellation_types_pie_chart(conn: psycopg2.extensions.connection, station_c
 
     # plotting data on chart
     plt.clf()
+
     plt.title("Most Common Cancellation Reasons (Past Week)")
-    plt.pie([i[2] for i in cancellation_data], labels=[i[0]
-            for i in cancellation_data], colors=palette_color, autopct='%1.1f%%')
 
-    plt.savefig("cancellation_reason_pie_chart.jpg")
+    plt.pie([i[2] for i in cancellation_data],
+            labels=[i[0] for i in cancellation_data], colors=palette_color,
+            autopct='%1.1f%%')
+
+    plt.savefig(f"{ENV['LOCAL_FOLDER']}/cancellation_reason_pie_chart.jpg")
 
 
-def generate_html(conn: psycopg2.extensions.connection, station_crs: str, html_path: str) -> None:
-    """Given a station_crs code, this function saves a html file locally which produces a 
+def generate_html(conn: connection, station_crs: str, html_path: str, folder: str) -> None:
+    """Given a station_crs code, this function saves a html file locally which produces a
     report on the corresponding station's delays and cancellations.
     It is saved to the specified html_path."""
 
@@ -195,10 +231,10 @@ def generate_html(conn: psycopg2.extensions.connection, station_crs: str, html_p
     station_name = get_station_name(conn, station_crs)
 
     average_delay_per_hour_graph(conn, station_crs)
+
     cancellation_types_pie_chart(conn, station_crs)
 
-    cancellation_reasons = get_most_common_cancellation_reasons(
-        conn, station_crs)
+    cancellation_reasons = get_most_common_cancellation_reasons(conn, station_crs)
 
     table_html = ""
     for reason in cancellation_reasons:
@@ -217,11 +253,11 @@ def generate_html(conn: psycopg2.extensions.connection, station_crs: str, html_p
             <h1>Station Performance Report: {station_name}</h1>
             <h2>Delay Information</h2>
             <p><b>Percentage of Delays</b>: {delay_and_cancellation_percentages["delay_percentage"]}%      |       <b>Average Delay Time</b>: {average_delay} Minutes</p>
-            <img  src="average_delay_per_hour_graph.jpg" alt="seaborn plot" style="width:400px;height:300px;">
+            <img  src="{folder}/average_delay_per_hour_graph.jpg" alt="seaborn plot" style="width:400px;height:300px;">
             <h2>Cancellation Information</h2>
-            <p><b>Percentage of Cancellations</b>: {delay_and_cancellation_percentages["cancellation_percentage"]}%      |       <b>Most Common Cancellation Reason</b>: {cancellation_reasons[0][0]}</p>
+            <p><b>Percentage of  Cancellations</b>: {delay_and_cancellation_percentages["cancellation_percentage"]}%      |       <b>Most Common Cancellation Reason</b>: {cancellation_reasons[0][0]}</p>
 
-            <img  src="cancellation_reason_pie_chart.jpg" alt="seaborn plot" style="width:400px;height:300px;">
+            <img  src="{folder}/cancellation_reason_pie_chart.jpg" alt="seaborn plot" style="width:400px;height:300px;">
 
             <table>
                 <tr>
@@ -241,7 +277,7 @@ def generate_html(conn: psycopg2.extensions.connection, station_crs: str, html_p
 
 
 def convert_html_to_pdf(source_html: str, output_filename: str) -> None:
-    """This function converts html a html string into a pdf
+    """This function converts a html string into a pdf
     file saved in the current directory with the file name
     assigned by the 'output_filename' argument."""
 
@@ -252,10 +288,10 @@ def convert_html_to_pdf(source_html: str, output_filename: str) -> None:
     pisa_status = pisa.CreatePDF(
         # the HTML to convert
         src=source_html,
-        dest=result_file)           # file handle to receive result
+        dest=result_file)  # file handle to receive result
 
     # close output file
-    result_file.close()                 # close output file
+    result_file.close()  # close output file
 
     # return False on success and True on errors
     return pisa_status.err
@@ -271,9 +307,9 @@ def generate_email_object(subject: str, body: str, attachment_file_path: str) ->
 
     file = MIMEApplication(
         open(attachment_file_path, "rb").read(),
-        name=os.path.basename(attachment_file_path))
+        name=path.basename(attachment_file_path))
 
-    file['Content-Disposition'] = f'attachment; filename="{os.path.basename(attachment_file_path)}"'
+    file['Content-Disposition'] = f'attachment; filename="{path.basename(attachment_file_path)}"'
 
     msg.attach(file)
 
@@ -286,11 +322,11 @@ def email_sender(email: MIMEMultipart, email_destinations: list[str]) -> None:
 
     ses_client = client("ses",
                         region_name="eu-west-2",
-                        aws_access_key_id=os.environ["AWS_ACCESS_KEY_ID"],
-                        aws_secret_access_key=os.environ["AWS_SECRET_ACCESS_KEY"])
+                        aws_access_key_id=ENV["ACCESS_KEY_ID"],
+                        aws_secret_access_key=ENV["SECRET_ACCESS_KEY"])
 
     ses_client.send_raw_email(
-        Source=os.environ["SOURCE_EMAIL"],
+        Source=ENV["SOURCE_EMAIL"],
         Destinations=email_destinations,
         RawMessage={
             'Data': email.as_string()
@@ -298,7 +334,7 @@ def email_sender(email: MIMEMultipart, email_destinations: list[str]) -> None:
     )
 
 
-def group_email_subscribers(conn: psycopg2.extensions.connection) -> dict:
+def group_email_subscribers(conn: connection) -> dict:
     """This function returns a dictionary with station crs codes
     as keys and a list of the email addresses of weekly email
     report subscriber to that particular station as a values."""
@@ -315,54 +351,77 @@ def group_email_subscribers(conn: psycopg2.extensions.connection) -> dict:
     crs_address_dict = {}
 
     for recipient in recipient_details:
-
         crs_address_dict[recipient[1]] = crs_address_dict.get(
             recipient[1], []) + [recipient[0]]
 
     return crs_address_dict
 
 
-def main(conn: psycopg2.extensions.connection):
-    """This function emails all weekly report station 
-    subscribers."""
+def add_report_to_bucket(aws_client, filename: str, bucket: str, object_name: str):
+    """
+    Uploads the pdf report into the bucket.
+    """
+    aws_client.upload_file(filename, bucket, object_name)
 
-    subscriber_groups = group_email_subscribers(conn)
 
-    for group in subscriber_groups.keys():
+def handler(event: dict = None, context: dict = None) -> dict:
+    """
+    Adds logic from main into handler to be used in lambda.
+    """
 
-        email_destinations = subscriber_groups[group]
+    setup_logging()
 
-        station_crs = group
+    load_dotenv()
+
+    s3_client = get_s3_connection(ENV)
+
+    db_conn = get_db_connection(ENV)
+
+    local_folder = ENV['LOCAL_FOLDER']
+
+    if not path.exists(f"{local_folder}/"):
+        makedirs(f"{local_folder}/")
+
+    subscriber_groups = group_email_subscribers(db_conn)
+
+    for station_crs in subscriber_groups.keys():
+        email_destinations = subscriber_groups[station_crs]
+        logging.info("Email address extracted")
 
         station_name = get_station_name(db_conn, station_crs)
-        html_file_name = f"{station_crs}_{date.today()}.html"
+        logging.info("Station name extracted")
 
-        generate_html(db_conn, station_crs, html_file_name)
+        html_file_name = f"{local_folder}/{station_crs}_{date.today()}.html"
+
+        generate_html(db_conn, station_crs, html_file_name, local_folder)
+        logging.info("HTML Generated")
 
         source_html = open(html_file_name, "r").read()
-        pdf_filepath = f"{station_crs}_{date.today()}.pdf"
+        pdf_filepath = f"{local_folder}/{station_crs}_{date.today()}.pdf"
 
         convert_html_to_pdf(source_html, pdf_filepath)
+        logging.info("PDF Generated")
 
         subject = f"{station_name} Station Performance Report"
         body = f"Attached to this email is a report on the performance of {station_name} station."
 
         email_obj = generate_email_object(subject, body, pdf_filepath)
+        logging.info("Email object created")
 
         email_sender(email_obj, email_destinations)
+        logging.info("Email sent!")
+
+        add_report_to_bucket(s3_client, pdf_filepath,
+                             S3_BUCKET, f"{station_crs}/{pdf_filepath}")
+        logging.info("Added report to bucket")
+
+    db_conn.close()
+    logging.info("Connection closed")
+
+    return {
+        "status": "Success!"
+    }
 
 
 if __name__ == "__main__":
-    load_dotenv()
-
-    db_conn = psycopg2.connect(
-        database=os.environ["DB_NAME"],
-        user=os.environ["DB_USER"],
-        password=os.environ["DB_PASS"],
-        host=os.environ["DB_HOST"],
-        port=os.environ["DB_PORT"],
-    )
-
-    main(db_conn)
-
-    db_conn.close()
+    handler()

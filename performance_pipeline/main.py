@@ -6,9 +6,9 @@ from os import environ as ENV
 import psycopg2
 from dotenv import load_dotenv
 
-from extract import fetch_train_services_data_for_station, load_row_from_csv
-from load import upload_arrivals, upload_cancellations
-from transform import transform_train_services_data
+from performance_extract import fetch_train_services_data_for_station, load_row_from_csv
+from performance_load import upload_arrivals, upload_cancellations
+from performance_transform import transform_train_services_data
 
 STATIONS_FILENAME = "stations.csv"
 
