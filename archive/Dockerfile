@@ -9,7 +9,7 @@ COPY requirements.txt .
 RUN pip install -r requirements.txt
 
 # Copy the lambda function code
-COPY archive_queries.py .
+COPY sql_queries.py .
 COPY archive.py .
 
 CMD [ "archive.handler" ]
