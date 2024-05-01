@@ -4,8 +4,7 @@ from email.mime.text import MIMEText
 from email.mime.application import MIMEApplication
 from email.mime.multipart import MIMEMultipart
 from datetime import date
-import os
-
+from os import makedirs, path, environ
 
 import seaborn as sns
 import matplotlib.pyplot as plt
@@ -104,11 +103,11 @@ def get_delay_and_cancellation_percentages(conn: psycopg2.extensions.connection,
         num_of_cancellations = cur.fetchone()
 
     delay_percentage = round(int(
-        num_of_delays[0])/(int(num_of_arrivals[0]+int(num_of_cancellations[0])))*100, 2)
+        num_of_delays[0]) / (int(num_of_arrivals[0] + int(num_of_cancellations[0]))) * 100, 2)
 
     cancellation_percentage = round(int(
-        num_of_cancellations[0])/(int(num_of_arrivals[0]+int(num_of_cancellations[0])))*100,
-        2)
+        num_of_cancellations[0]) / (int(num_of_arrivals[0] + int(num_of_cancellations[0]))) * 100,
+                                    2)
 
     return {"delay_percentage": delay_percentage,
             "cancellation_percentage": cancellation_percentage}
@@ -177,7 +176,8 @@ def cancellation_types_pie_chart(conn: psycopg2.extensions.connection, station_c
     plt.clf()
     plt.title("Most Common Cancellation Reasons (Past Week)")
     plt.pie([i[2] for i in cancellation_data], labels=[i[0]
-            for i in cancellation_data], colors=palette_color, autopct='%1.1f%%')
+                                                       for i in cancellation_data], colors=palette_color,
+            autopct='%1.1f%%')
 
     plt.savefig("cancellation_reason_pie_chart.jpg")
 
@@ -252,10 +252,10 @@ def convert_html_to_pdf(source_html: str, output_filename: str) -> None:
     pisa_status = pisa.CreatePDF(
         # the HTML to convert
         src=source_html,
-        dest=result_file)           # file handle to receive result
+        dest=result_file)  # file handle to receive result
 
     # close output file
-    result_file.close()                 # close output file
+    result_file.close()  # close output file
 
     # return False on success and True on errors
     return pisa_status.err
@@ -271,9 +271,9 @@ def generate_email_object(subject: str, body: str, attachment_file_path: str) ->
 
     file = MIMEApplication(
         open(attachment_file_path, "rb").read(),
-        name=os.path.basename(attachment_file_path))
+        name=path.basename(attachment_file_path))
 
-    file['Content-Disposition'] = f'attachment; filename="{os.path.basename(attachment_file_path)}"'
+    file['Content-Disposition'] = f'attachment; filename="{path.basename(attachment_file_path)}"'
 
     msg.attach(file)
 
@@ -315,7 +315,6 @@ def group_email_subscribers(conn: psycopg2.extensions.connection) -> dict:
     crs_address_dict = {}
 
     for recipient in recipient_details:
-
         crs_address_dict[recipient[1]] = crs_address_dict.get(
             recipient[1], []) + [recipient[0]]
 
@@ -328,39 +327,41 @@ def main(conn: psycopg2.extensions.connection):
 
     subscriber_groups = group_email_subscribers(conn)
 
-    for group in subscriber_groups.keys():
+    if not path.exists(f"data/"):
+        makedirs(f"data/")
 
+    for group in subscriber_groups.keys():
         email_destinations = subscriber_groups[group]
 
         station_crs = group
 
         station_name = get_station_name(db_conn, station_crs)
-        html_file_name = f"{station_crs}_{date.today()}.html"
+        html_file_name = f"data/{station_crs}_{date.today()}.html"
 
         generate_html(db_conn, station_crs, html_file_name)
 
         source_html = open(html_file_name, "r").read()
-        pdf_filepath = f"{station_crs}_{date.today()}.pdf"
+        pdf_filepath = f"data/{station_crs}_{date.today()}.pdf"
 
         convert_html_to_pdf(source_html, pdf_filepath)
 
-        subject = f"{station_name} Station Performance Report"
+        subject = f"data/{station_name} Station Performance Report"
         body = f"Attached to this email is a report on the performance of {station_name} station."
 
-        email_obj = generate_email_object(subject, body, pdf_filepath)
-
-        email_sender(email_obj, email_destinations)
+        # email_obj = generate_email_object(subject, body, pdf_filepath)
+        #
+        # email_sender(email_obj, email_destinations)
 
 
 if __name__ == "__main__":
     load_dotenv()
 
     db_conn = psycopg2.connect(
-        database=os.environ["DB_NAME"],
-        user=os.environ["DB_USER"],
-        password=os.environ["DB_PASS"],
-        host=os.environ["DB_HOST"],
-        port=os.environ["DB_PORT"],
+        database=environ["DB_NAME"],
+        user=environ["DB_USER"],
+        password=environ["DB_PASS"],
+        host=environ["DB_HOST"],
+        port=environ["DB_PORT"],
     )
 
     main(db_conn)
