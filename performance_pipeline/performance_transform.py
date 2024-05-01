@@ -2,7 +2,7 @@
 
 from datetime import date, datetime
 
-from .entities import Arrival, Cancellation, Operator, Station, Service, CancellationType
+from entities import Arrival, Cancellation, Operator, Station, Service, CancellationType
 
 
 def transform_train_services_data(
