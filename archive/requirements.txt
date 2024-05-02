@@ -2,3 +2,5 @@ python-dotenv
 boto3
 psycopg2-binary
 pandas
+pylint
+pytest
