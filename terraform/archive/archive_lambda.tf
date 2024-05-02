@@ -26,7 +26,7 @@ resource "aws_lambda_function" "archive-lambda" {
       DB_HOST           = var.DB_HOST,
       DB_NAME           = var.DB_NAME,
       DB_USER           = var.DB_USER,
-      DB_PASSWORD       = var.DB_PASS,
+      DB_PASS       = var.DB_PASS,
       DB_PORT           = var.DB_PORT,
       S3_BUCKET         = var.S3_BUCKET
     }
