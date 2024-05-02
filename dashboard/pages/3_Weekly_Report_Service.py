@@ -1,4 +1,4 @@
-"""Streamlit app for incidents subscription form"""
+"""Streamlit page for report subscription form."""
 
 from __future__ import annotations
 from os import environ as ENV
