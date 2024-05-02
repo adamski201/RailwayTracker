@@ -23,7 +23,7 @@ resource "aws_iam_role" "archive-schedule-role" {
 }
 
 resource "aws_scheduler_schedule" "archive-schedule" {
-  name                = "c10-archive-archive-schedule"
+  name                = "c10-archive-archive-schedule-terraform"
   group_name          = "default"
   schedule_expression = "cron(0 9 1 * ? *)"
 

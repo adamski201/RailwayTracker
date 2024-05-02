@@ -14,7 +14,7 @@ data "aws_ecr_image" "archive-lambda-image" {
 
 resource "aws_lambda_function" "archive-lambda" {
   role          = aws_iam_role.archive-lambda-role.arn
-  function_name = "c10-railway-archive-lambda"
+  function_name = "c10-railway-archive-lambda-terraform"
   package_type  = "Image"
   image_uri     = data.aws_ecr_image.archive-lambda-image.image_uri
   memory_size   = 150
