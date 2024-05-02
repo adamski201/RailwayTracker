@@ -38,5 +38,3 @@ variable "TOPIC_ARN" {
   type = string
 }
 
-
-
