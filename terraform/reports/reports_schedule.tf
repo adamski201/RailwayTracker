@@ -25,7 +25,7 @@ resource "aws_iam_role" "reports-schedule-role" {
 resource "aws_scheduler_schedule" "reports-schedule" {
   name                = "c10-railway-reports-schedule-terraform"
   group_name          = "default"
-  schedule_expression = "cron(0 9 1 * ? *)"
+  schedule_expression = "cron(0 9 ? * 2 *)"
 
   flexible_time_window {
     mode = "OFF"
