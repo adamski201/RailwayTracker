@@ -17,7 +17,6 @@ variable "HOST" {
 
 variable "STOMP_PORT" {
     type = string
-    default = "5439"
 }
 
 variable "USERNAME" {
