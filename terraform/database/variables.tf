@@ -19,3 +19,14 @@ variable "VPC_ID" {
     type = string
 }
 
+variable "DB_USER" {
+    type = string
+}
+
+variable "DB_PASS" {
+    type = string
+}
+
+variable "PUBLIC_SUBNET_ID" {
+    type = string
+}
