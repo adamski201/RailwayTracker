@@ -40,7 +40,16 @@ resource "aws_ecs_task_definition" "dashboard-task-definition" {
         {
           "name" : "DB_PASS",
           "value" : var.DB_PASS
+        },
+        {
+          "name" : "DB_PORT",
+          "value" : var.DB_PORT
+        },
+        {
+          "name" : "TOPIC_ARN",
+          "value" : var.TOPIC_ARN
         }
+
       ]
     }
   ])
