@@ -2,7 +2,7 @@
 
 ## About
 
-RailWatch comprises a set of related services for the monitoring of UK railway stations and rail operators.
+RailWatch comprises a set of related services for the analysis and monitoring of UK railway stations and rail operators.
 
 Our website can be found [here](http://18.133.189.84:8501/).
 
@@ -19,13 +19,21 @@ Currently, our data sources include the Real Time Trains API and the National Ra
 
 `.github/`: Contains the GitHub Actions workflow files for CI/CD.
 
+`archive/`: Contains the scripts for automatically archiving data older than a month.
+
 `dashboard/`: Contains the Streamlit dashboard code.
+
+`database/`: Contains the database schema and related setup scripts.
 
 `images/`: Contains images used in the README [across the project].
 
-`terraform/`: Contains the Terraform files for deploying the cloud services.
+`incidents/`: Contains the ETL process for the incident feed data.
 
-`schema/:` Contains the SQL schema for the database.
+`performance_pipeline/`: Contains the ETL process for the train arrivals and disruption data.
+
+`reports/`: Contains scripts for generating weekly summary reports.
+
+`terraform/`: Contains the Terraform files for deploying the cloud services.
 
 ## Pre-requisites
 
