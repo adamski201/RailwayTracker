@@ -2,7 +2,18 @@
 
 ## About
 
-Brief description of project.
+RailWatch comprises a set of related services for the monitoring of UK railway stations and rail operators.
+
+Our website can be found [here](http://18.133.189.84:8501/).
+
+The website contains: 
+    - A dashboard displaying various disruption statistics for a selected train station, such as a breakdown of average delays per hour of the day, historical trends in delays and cancellations, and a live feed of major incidents that are currently affecting that station.
+    - A page allowing you to sign up for weekly summary reports on the performance of your chosen station.
+    - A page allowing you to sign up for realtime incident alerts for a given operator.
+
+Realtime incident alerts arrive via SMS and/or Email within seconds of publication on the National Rail incident feed.
+
+Currently, our data sources include the Real Time Trains API and the National Rail KnowledgeBase incident feed.
 
 ## Folder & Files Structure
 
