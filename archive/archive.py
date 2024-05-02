@@ -212,12 +212,9 @@ def handler(event: dict = None, context: dict = None) -> dict:
             "body": "Missing required keys in the event data."
         }
 
-    except Exception as e:
-        logging.error("An error occurred: %s", {str(e)})
-
-        return {
-            "body": "An error occurred"
-        }
+    except Exception as err:
+        logging.error("An error occurred: %s", {str(err)})
+        raise err
 
 
 if __name__ == "__main__":
