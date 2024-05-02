@@ -17,9 +17,9 @@ from sql_queries import (S_DELAYS, S_DELAYS_OVER_5_MIN, S_AVG_DELAY, S_TOTAL_ARR
                          DELETE_OLD_ARRIVAL_DATA, DELETE_OLD_CANCELLATION_DATA)
 
 
-class DataFetchError(Exception):
-    """Exception raised when there is an error fetching data."""
-    pass
+# class DataFetchError(Exception):
+#     """Exception raised when there is an error fetching data."""
+#     pass
 
 
 def setup_logging() -> None:
@@ -77,8 +77,8 @@ def get_stations_performance(conn: connection, queries: list[str]) -> pd.DataFra
         if not result.empty:
             performance_data.append(result)
 
-    if not performance_data:
-        raise DataFetchError("No data fetched from the database.")
+    # if not performance_data:
+    #     raise DataFetchError("No data fetched from the database.")
 
     # combines the dataframes
     return reduce(lambda left, right: pd.merge(left, right, on=['day', 'station_id'], how='outer'), performance_data)
@@ -94,8 +94,8 @@ def get_operators_performance(conn: connection, queries: list[str]) -> pd.DataFr
         if not result.empty:
             performance_data.append(result)
 
-    if not performance_data:
-        raise DataFetchError("No data fetched from the database.")
+    # if not performance_data:
+    #     raise DataFetchError("No data fetched from the database.")
 
     # combines the dataframes
     return reduce(lambda left, right: pd.merge(left, right, on=['day', 'operator_id'], how='outer'), performance_data)
@@ -161,23 +161,33 @@ def handler(event: dict = None, context: dict = None) -> dict:
     """
     Adds logic from main into handler to be used in lambda.
     """
+    logging.info("Starting the process...")
 
     station_queries = [S_DELAYS, S_DELAYS_OVER_5_MIN, S_AVG_DELAY, S_TOTAL_ARRIVALS, S_TOTAL_CANCELLATIONS]
     operator_queries = [O_DELAYS, O_DELAYS_OVER_5_MIN, O_AVG_DELAY, O_TOTAL_ARRIVALS, O_TOTAL_CANCELLATIONS]
     deletion_queries = [DELETE_OLD_ARRIVAL_DATA, DELETE_OLD_CANCELLATION_DATA]
 
     load_dotenv()
+    logging.info("Environment variables loaded successfully.")
+
     conn = get_db_connection(ENV)
+    logging.info("Connected to the database successful.")
 
     stations_data = clean_data(get_stations_performance(conn, station_queries))
+    logging.info("Station data fetched successfully.")
     operators_data = clean_data(get_operators_performance(conn, operator_queries))
+    logging.info("Operator data fetched successfully.")
 
     load_to_db(conn, convert_to_list(stations_data), INSERT_STATION_PERFORMANCE)
+    logging.info("Station data loaded to the database.")
     load_to_db(conn, convert_to_list(operators_data), INSERT_OPERATOR_PERFORMANCE)
+    logging.info("Operator data loaded to the database.")
 
     delete_old_data(conn, deletion_queries)
+    logging.info("Old data deleted successfully.")
 
     close_connection(conn)
+    logging.info("Connection to the database closed.")
 
     return {
         "status": "Success!"
@@ -185,23 +195,34 @@ def handler(event: dict = None, context: dict = None) -> dict:
 
 
 if __name__ == "__main__":
+    logging.info("Starting the process...")
+
     load_dotenv()
+    logging.info("Starting the process...")
 
     conn = get_db_connection(ENV)
+    logging.info("Connected to the database successful.")
 
     station_queries = [S_DELAYS, S_DELAYS_OVER_5_MIN, S_AVG_DELAY, S_TOTAL_ARRIVALS, S_TOTAL_CANCELLATIONS]
     operator_queries = [O_DELAYS, O_DELAYS_OVER_5_MIN, O_AVG_DELAY, O_TOTAL_ARRIVALS, O_TOTAL_CANCELLATIONS]
 
     stations_data = clean_data(get_stations_performance(conn, station_queries))
+    logging.info("Station data fetched successfully.")
     operators_data = clean_data(get_operators_performance(conn, operator_queries))
+    logging.info("Operator data fetched successfully.")
 
-    stations_data.to_csv("stations_data.csv",  index=False, encoding='utf-8')
+    stations_data.to_csv("stations_data.csv", index=False, encoding='utf-8')
     operators_data.to_csv("operators_data.csv", index=False, encoding='utf-8')
+    logging.info("Data saved to CSV files.")
 
     load_to_db(conn, convert_to_list(stations_data), INSERT_STATION_PERFORMANCE)
+    logging.info("Station data loaded to the database.")
     load_to_db(conn, convert_to_list(operators_data), INSERT_OPERATOR_PERFORMANCE)
+    logging.info("Operator data loaded to the database.")
 
     deletion_queries = [DELETE_OLD_ARRIVAL_DATA, DELETE_OLD_CANCELLATION_DATA]
     delete_old_data(conn, deletion_queries)
+    logging.info("Old data deleted successfully.")
 
     close_connection(conn)
+    logging.info("Connection to the database closed.")
