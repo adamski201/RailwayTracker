@@ -160,10 +160,18 @@ cython_debug/
 .idea/
 performance_pipeline/.idea/
 
-
+# Other unwanted files
 .DS_Store
 *.jpg
 *.html
 *.pdf
 *.csv
 
+
+# Terraform
+.terraform
+*.tfvars
+*.tfstate
+*.lock.hcl
+*tfstate.backup
+*.terraform.tfstate.lock.info
