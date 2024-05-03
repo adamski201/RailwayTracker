@@ -209,7 +209,7 @@ def handler(event: dict = None, context: dict = None) -> dict:
 
         return {
             "statusCode": 400,
-            "body": "Missing required keys in the event data."
+            "body": "Missing required keys in the data as no data fetched for SQL queries."
         }
 
     except Exception as err:
