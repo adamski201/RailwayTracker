@@ -1,4 +1,4 @@
-"""Functions to publish sms and email messages to SNS topic with attributes attached"""
+"""Functions to publish sms and email messages to SNS topic with attributes attached."""
 
 import json
 import logging
@@ -66,7 +66,7 @@ def get_message_attributes(operators: list) -> dict:
 
 def publish_multi_message_with_attributes(sns_client: BaseClient, topic_arn: str,
                                           message_subject: str, sms_message: str,
-                                          email_message: str, message_attributes: dict):
+                                          email_message: str, message_attributes: dict) -> str:
     """Publishes a multi-format message with attributes to a topic."""
 
     try:

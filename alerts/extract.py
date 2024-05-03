@@ -1,6 +1,6 @@
 """Functions to receive live data from the
 Knowledgebase (KB) Real Time Incidents API
-and process each message upon receipt"""
+and process each message upon receipt."""
 
 from time import sleep
 from os import environ as ENV
@@ -50,7 +50,7 @@ class TrainListener(stomp.ConnectionListener):
             logging.info('Data has been inserted into database')
 
     def on_heartbeat(self):
-        """Executes when heartbeat is received from server"""
+        """Executes when heartbeat is received from server."""
 
         logging.info("Heartbeat received")
 
