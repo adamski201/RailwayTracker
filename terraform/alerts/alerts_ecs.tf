@@ -128,6 +128,7 @@ data "aws_subnet" "subnet-3" {
 
 
 
+
 resource "aws_ecs_service" "alerts-service" {
 
   name            = "c10-railway-alerts-service-terraform"

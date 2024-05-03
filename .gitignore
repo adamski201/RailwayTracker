@@ -174,3 +174,4 @@ performance_pipeline/.idea/
 *.tfstate
 *.lock.hcl
 *tfstate.backup
+*.terraform.tfstate.lock.info
