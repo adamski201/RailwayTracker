@@ -1,28 +1,34 @@
+provider "aws" {
+    region = var.AWS_REGION
+    access_key = var.AWS_ACCESS_KEY_ID
+    secret_key = var.AWS_SECRET_ACCESS_KEY
+}
+
 data "aws_iam_role" "ecs-role" {
   name = "ecsTaskExecutionRole"
 }
 
-resource "aws_cloudwatch_log_group" "trains-incident-alerts-log-group" {
-  name = "trains-incident-alerts-log-group"
+resource "aws_cloudwatch_log_group" "c10-railway-alerts-log-group" {
+  name = "c10-railway-alerts-log-group"
 }
 
-resource "aws_cloudwatch_log_stream" "trains-incident-alerts-log-group" {
-  name           = "trains-incident-alerts-log-group"
-  log_group_name = aws_cloudwatch_log_group.trains-incident-alerts-log-group.name
+resource "aws_cloudwatch_log_stream" "c10-railway-alerts-log-group" {
+  name           = "c10-railway-alerts-log-group"
+  log_group_name = aws_cloudwatch_log_group.c10-railway-alerts-log-group.name
 }
 
 resource "aws_ecs_task_definition" "trains-incidents-task-definition" {
-  family                = "c10-trains-incident-alerts-terraform"
+  family                = "c10-railway-alerts-task-definition-terraform"
   container_definitions = jsonencode([
     {
-      name         = "c10-trains-incident-alerts-terraform"
+      name         = "c10-railway-alerts-container"
       image        = "129033205317.dkr.ecr.eu-west-2.amazonaws.com/c10-trains-incident-alerts-repo:latest"
       essential    = true
       logConfiguration= {
       "logDriver": "awslogs",
       "options": {
-        "awslogs-group": "trains-incident-alerts-log-group",
-        "awslogs-stream-prefix": "trains-incident-alerts-log-group",
+        "awslogs-group": "c10-railway-alerts-log-group",
+        "awslogs-stream-prefix": "c10-railway-alerts-log-group",
         "awslogs-region": "eu-west-2"
       }
     }
@@ -124,7 +130,7 @@ data "aws_subnet" "subnet-3" {
 
 resource "aws_ecs_service" "alerts-service" {
 
-  name            = "c10-trains-incidents-alerts-service-terraform"
+  name            = "c10-railway-alerts-service-terraform"
   cluster         = data.aws_ecs_cluster.c10-ecs-cluster.id
   task_definition = aws_ecs_task_definition.trains-incidents-task-definition.arn
   launch_type     = "FARGATE"
