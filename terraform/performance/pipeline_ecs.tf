@@ -1,5 +1,5 @@
 resource "aws_iam_role" "ecs_role" {
-  name = "ecs_role"
+  name = "c10-railway-performance-role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -58,7 +58,7 @@ resource "aws_iam_role" "schedule-role" {
 }
 
 resource "aws_ecs_task_definition" "performance_pipeline_task" {
-  family                   = "railway-performance-pipeline-terraform"
+  family                   = "c10-railway-performance-terraform"
   execution_role_arn       = aws_iam_role.ecs_role.arn
   network_mode             = "awsvpc"
   cpu                      = "1024"
@@ -114,7 +114,7 @@ resource "aws_ecs_task_definition" "performance_pipeline_task" {
 
 
 resource "aws_scheduler_schedule" "cron" {
-  name        = "my-schedule"
+  name        = "c10-railway-performance-schedule-terraform"
   group_name  = "default"
 
   flexible_time_window {
