@@ -103,7 +103,6 @@ def create_message(data: dict, operator_list: list) -> str:
     info_link = data["info_link"]
     routes_affected = data["routes_affected"]
     formatted_message = (
-        f"RailWatch"
         f"\n\nInformation:\n{summary}\n\n"
         f"Affected operator/s:\n{', '.join(operator_list)}\n\n"
         f"Routes affected:\n{routes_affected}\n\n"
@@ -116,21 +115,24 @@ def create_subject(data: dict, operator_list: list) -> str:
     """Creates subject title for notifications."""
 
     summary = data['summary'].lower()
-    operators = ", ".join(operator_list)
+    if len(operator_list) > 3:
+        operators = ", ".join(operator_list[:3]) + ' and more'
+    else:
+        operators = ", ".join(operator_list)
 
     prefix_messages = {
-        "lines reopened": f"RailWatch - Incident Update ({operators})",
-        "amend": f"RailWatch - Amendments ({operators})",
-        "alteration": f"RailWatch - Amendments ({operators})",
-        "bus": f"RailWatch - Bus replacements ({operators})",
-        "reduced": f"RailWatch - Reduced service ({operators})",
-        "industrial action": f"RailWatch - Industrial action ({operators})"
+        "lines reopened": f"Incident Update ({operators})",
+        "amend": f"Amendments ({operators})",
+        "alteration": f"Amendments ({operators})",
+        "bus": f"Bus replacements ({operators})",
+        "reduced": f"Reduced service ({operators})",
+        "industrial action": f"Industrial action ({operators})"
     }
     for prefix in prefix_messages:
         if summary.startswith(prefix):
             return prefix_messages.get(prefix)
 
-    return f"RailWatch - Incident Notice ({operators})"
+    return f"Incident Notice ({operators})"
 
 
 def send_alerts(sns_client: BaseClient, data: dict, topic: str) -> None:
