@@ -105,7 +105,7 @@ resource "aws_ecs_task_definition" "performance_pipeline_task" {
         },
         {
           name  = "DB_PASSWORD"
-          value = var.DB_PASSWORD
+          value = var.DB_PASS
         }
       ]
     }
