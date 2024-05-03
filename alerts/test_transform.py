@@ -15,7 +15,7 @@ NS = {"ns": "http://nationalrail.co.uk/xml/incident",
       "com": "http://nationalrail.co.uk/xml/common"}
 
 
-with open("incidents/test_data/test_incident_data.xml", "r", encoding="utf-8") as file:
+with open("alerts/test_data/test_incident_data.xml", "r", encoding="utf-8") as file:
     MSG = file.read()
 
 
