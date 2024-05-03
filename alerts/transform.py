@@ -1,4 +1,4 @@
-"""Functions to transform and clean messages upon receipt"""
+"""Functions to transform and clean messages upon receipt."""
 
 from datetime import datetime
 
