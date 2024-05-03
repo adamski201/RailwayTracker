@@ -24,7 +24,9 @@ variable "DB_USER" {
 }
 
 variable "DB_PASS" {
-  type = string
+  type      = string
+  sensitive = true
+
 }
 
 variable "DB_NAME" {
