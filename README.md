@@ -92,19 +92,15 @@ terraform destroy
 
 ### ERD diagram for Short-term Storage
 
-![ERD diagram 1](https://github.com/adamski201/Railway-Tracker/blob/main/images/erd_short.png)
+![ERD diagram 1](https://github.com/adamski201/RailwayTracker/blob/readme/images/public_erd.png)
 
 ### ERD diagram for Long-term Storage
 
-![ERD diagram 2](https://github.com/adamski201/Railway-Tracker/blob/main/images/erd_long.png)
+![ERD diagram 2](https://github.com/adamski201/RailwayTracker/blob/readme/images/archive_erd.png)
 
 ### Cloud architecture diagram
 
-![Cloud architecture diagram](https://github.com/adamski201/Railway-Tracker/blob/main/images/architecture_diagram.png)
-
-### Dashboard Wireframe
-
-### Dashboard Mockup
+![Cloud architecture diagram](https://github.com/adamski201/RailwayTracker/blob/readme/images/architecture_diagram_revision.png)
 
 ## Contributors
 
