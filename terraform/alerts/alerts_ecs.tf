@@ -96,7 +96,6 @@ resource "aws_ecs_task_definition" "trains-incidents-task-definition" {
   execution_role_arn       = data.aws_iam_role.ecs-role.arn
 }
 
-
 data "aws_vpc" "cohort-10-vpc" {
   id = var.VPC_ID
 }
