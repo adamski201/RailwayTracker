@@ -1,3 +1,17 @@
+variable "AWS_ACCESS_KEY_ID" {
+  type = string
+}
+
+variable "AWS_SECRET_ACCESS_KEY" {
+  type = string
+}
+
+variable "AWS_REGION" {
+  type    = string
+  default = "eu-west-2"
+}
+
+
 variable "DB_HOST" {
   description = "Database host URL"
   type        = string
@@ -8,7 +22,7 @@ variable "DB_NAME" {
   type        = string
 }
 
-variable "DB_PASSWORD" {
+variable "DB_PASS" {
   description = "Database password"
   type        = string
   sensitive   = true
