@@ -110,7 +110,8 @@ def clean_data(data: pd.DataFrame) -> pd.DataFrame:
     data['delay_5m_count'] = data['delay_5m_count'].fillna(0).astype(int)
     data['avg_delay_min'] = data['avg_delay_min'].fillna(0).astype(int)
     data['arrival_count'] = data['arrival_count'].fillna(0).astype(int)
-    data['cancellation_count'] = data['cancellation_count'].fillna(0).astype(int)
+    data['cancellation_count'] = data['cancellation_count'].fillna(
+        0).astype(int)
 
     return data
 
@@ -137,7 +138,7 @@ def load_to_db(conn: connection, data: list[tuple], query: str) -> None:
             logging.error("Error code: %s", err.pgcode)
 
 
-def delete_old_data(conn: connection, queries: list[str]):
+def delete_old_data(conn: connection, queries: list[str]) -> None:
     """Deletes old data from 'arrivals' and 'cancellations'
     tables in the database that are older than 30 days."""
 
@@ -162,18 +163,23 @@ def handler(event: dict = None, context: dict = None) -> dict:
     Adds logic from main into handler to be used in lambda.
     """
 
-    station_queries = [S_DELAYS, S_DELAYS_OVER_5_MIN, S_AVG_DELAY, S_TOTAL_ARRIVALS, S_TOTAL_CANCELLATIONS]
-    operator_queries = [O_DELAYS, O_DELAYS_OVER_5_MIN, O_AVG_DELAY, O_TOTAL_ARRIVALS, O_TOTAL_CANCELLATIONS]
+    station_queries = [S_DELAYS, S_DELAYS_OVER_5_MIN,
+                       S_AVG_DELAY, S_TOTAL_ARRIVALS, S_TOTAL_CANCELLATIONS]
+    operator_queries = [O_DELAYS, O_DELAYS_OVER_5_MIN,
+                        O_AVG_DELAY, O_TOTAL_ARRIVALS, O_TOTAL_CANCELLATIONS]
     deletion_queries = [DELETE_OLD_ARRIVAL_DATA, DELETE_OLD_CANCELLATION_DATA]
 
     load_dotenv()
     conn = get_db_connection(ENV)
 
     stations_data = clean_data(get_stations_performance(conn, station_queries))
-    operators_data = clean_data(get_operators_performance(conn, operator_queries))
+    operators_data = clean_data(
+        get_operators_performance(conn, operator_queries))
 
-    load_to_db(conn, convert_to_list(stations_data), INSERT_STATION_PERFORMANCE)
-    load_to_db(conn, convert_to_list(operators_data), INSERT_OPERATOR_PERFORMANCE)
+    load_to_db(conn, convert_to_list(stations_data),
+               INSERT_STATION_PERFORMANCE)
+    load_to_db(conn, convert_to_list(operators_data),
+               INSERT_OPERATOR_PERFORMANCE)
 
     delete_old_data(conn, deletion_queries)
 
@@ -189,17 +195,22 @@ if __name__ == "__main__":
 
     conn = get_db_connection(ENV)
 
-    station_queries = [S_DELAYS, S_DELAYS_OVER_5_MIN, S_AVG_DELAY, S_TOTAL_ARRIVALS, S_TOTAL_CANCELLATIONS]
-    operator_queries = [O_DELAYS, O_DELAYS_OVER_5_MIN, O_AVG_DELAY, O_TOTAL_ARRIVALS, O_TOTAL_CANCELLATIONS]
+    station_queries = [S_DELAYS, S_DELAYS_OVER_5_MIN,
+                       S_AVG_DELAY, S_TOTAL_ARRIVALS, S_TOTAL_CANCELLATIONS]
+    operator_queries = [O_DELAYS, O_DELAYS_OVER_5_MIN,
+                        O_AVG_DELAY, O_TOTAL_ARRIVALS, O_TOTAL_CANCELLATIONS]
 
     stations_data = clean_data(get_stations_performance(conn, station_queries))
-    operators_data = clean_data(get_operators_performance(conn, operator_queries))
+    operators_data = clean_data(
+        get_operators_performance(conn, operator_queries))
 
     stations_data.to_csv("stations_data.csv",  index=False, encoding='utf-8')
     operators_data.to_csv("operators_data.csv", index=False, encoding='utf-8')
 
-    load_to_db(conn, convert_to_list(stations_data), INSERT_STATION_PERFORMANCE)
-    load_to_db(conn, convert_to_list(operators_data), INSERT_OPERATOR_PERFORMANCE)
+    load_to_db(conn, convert_to_list(stations_data),
+               INSERT_STATION_PERFORMANCE)
+    load_to_db(conn, convert_to_list(operators_data),
+               INSERT_OPERATOR_PERFORMANCE)
 
     deletion_queries = [DELETE_OLD_ARRIVAL_DATA, DELETE_OLD_CANCELLATION_DATA]
     delete_old_data(conn, deletion_queries)
