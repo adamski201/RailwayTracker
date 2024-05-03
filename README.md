@@ -29,7 +29,7 @@ Currently, our data sources include the Real Time Trains API and the National Ra
 
 `incidents/`: Contains the ETL process for the incident feed data.
 
-`performance_pipeline/`: Contains the ETL process for the train arrivals and disruption data.
+`performance/`: Contains the ETL process for the train arrivals and disruption data.
 
 `reports/`: Contains scripts for generating weekly summary reports.
 
@@ -192,13 +192,7 @@ VPC_ID=XXXXXXXXXX
 DB_USER=XXXXXXXXXX
 DB_PASS=XXXXXXXXXX
 PUBLIC_SUBNET_ID=XXXXXXXXXX
-```    
-
-
-## Development
-
-- Command to run it
-- Potentially other useful commands (reset DB, clear all user data, run in test mode, etc.)
+```
 
 ## Deployment
 
