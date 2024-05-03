@@ -7,7 +7,8 @@ variable "AWS_SECRET_ACCESS_KEY" {
 }
 
 variable "AWS_REGION" {
-  type = string
+  type    = string
+  default = "eu-west-2"
 }
 
 variable "DB_HOST" {
