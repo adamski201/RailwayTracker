@@ -1,4 +1,4 @@
-"""Functions to publish sms and email messages to SNS topic with attributes attached"""
+"""Functions to publish sms and email messages to SNS topic with attributes attached."""
 
 import json
 import logging
