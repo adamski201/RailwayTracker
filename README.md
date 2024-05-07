@@ -77,7 +77,7 @@ source venv/bin/activate
 pip3 install -r requirements.txt
 ````
 
-4. Navigate into the respective directories and create an .env file in each directory as shown below:
+5. Navigate into the respective directories and create an .env file in each directory as shown below:
 
 ```.env
 # Example for alerts/ directory
@@ -155,7 +155,7 @@ LOCAL_FOLDER=XXXXXXXXXX
 > - Replace `XXXXXXXXXX` with your actual configurations.
 > - Ensure not to upload your .env files to version control for security reasons.
 
-5. Navigate to the database directory and run the following command to create and seed the database tables:
+6. Navigate to the database directory and run the following command to create and seed the database tables:
 
 ```bash
 cd database/
