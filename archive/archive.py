@@ -11,15 +11,17 @@ from psycopg2.extras import RealDictCursor
 from psycopg2.extensions import connection
 import pandas as pd
 
-from sql_queries import (S_DELAYS, S_DELAYS_OVER_5_MIN, S_AVG_DELAY, S_TOTAL_ARRIVALS, S_TOTAL_CANCELLATIONS,
-                         O_DELAYS, O_DELAYS_OVER_5_MIN, O_AVG_DELAY, O_TOTAL_ARRIVALS, O_TOTAL_CANCELLATIONS,
+from sql_queries import (S_DELAYS, S_DELAYS_OVER_5_MIN, S_AVG_DELAY,
+                         S_TOTAL_ARRIVALS, S_TOTAL_CANCELLATIONS,
+                         O_DELAYS, O_DELAYS_OVER_5_MIN, O_AVG_DELAY,
+                         O_TOTAL_ARRIVALS, O_TOTAL_CANCELLATIONS,
                          INSERT_STATION_PERFORMANCE, INSERT_OPERATOR_PERFORMANCE,
                          DELETE_OLD_ARRIVAL_DATA, DELETE_OLD_CANCELLATION_DATA)
 
-
-class DataFetchError(Exception):
-    """Exception raised when there is an error fetching data."""
-    pass
+STATION_QUERIES = [S_DELAYS, S_DELAYS_OVER_5_MIN, S_AVG_DELAY, S_TOTAL_ARRIVALS, S_TOTAL_CANCELLATIONS]
+OPERATOR_QUERIES = [O_DELAYS, O_DELAYS_OVER_5_MIN, O_AVG_DELAY, O_TOTAL_ARRIVALS, O_TOTAL_CANCELLATIONS]
+DELETION_QUERIES = [DELETE_OLD_ARRIVAL_DATA, DELETE_OLD_CANCELLATION_DATA]
+REQUIRED_KEYS = ['day', 'delay_1m_count', 'delay_5m_count', 'avg_delay_min', 'arrival_count', 'cancellation_count']
 
 
 def setup_logging() -> None:
@@ -57,6 +59,10 @@ def fetch_old_data(conn: connection, query: str) -> pd.DataFrame:
         with conn.cursor() as cur:
             cur.execute(query)
             rows = cur.fetchall()
+
+        if not rows:
+            logging.warning("No data fetched for query: %s", query)
+
         return pd.DataFrame(rows)
 
     except Error as err:
@@ -78,7 +84,7 @@ def get_stations_performance(conn: connection, queries: list[str]) -> pd.DataFra
             performance_data.append(result)
 
     if not performance_data:
-        raise DataFetchError("No data fetched from the database.")
+        return pd.DataFrame()
 
     # combines the dataframes
     return reduce(lambda left, right: pd.merge(left, right, on=['day', 'station_id'], how='outer'), performance_data)
@@ -95,7 +101,7 @@ def get_operators_performance(conn: connection, queries: list[str]) -> pd.DataFr
             performance_data.append(result)
 
     if not performance_data:
-        raise DataFetchError("No data fetched from the database.")
+        return pd.DataFrame()
 
     # combines the dataframes
     return reduce(lambda left, right: pd.merge(left, right, on=['day', 'operator_id'], how='outer'), performance_data)
@@ -116,6 +122,12 @@ def clean_data(data: pd.DataFrame) -> pd.DataFrame:
     return data
 
 
+def check_keys_exist(df: pd.DataFrame, keys: list[str]) -> bool:
+    """Check if all keys exist in the DataFrame."""
+
+    return all(key in df.columns for key in keys)
+
+
 def convert_to_list(df: str) -> list[tuple]:
     """Converts a DataFrame to a list of tuples."""
 
@@ -131,7 +143,6 @@ def load_to_db(conn: connection, data: list[tuple], query: str) -> None:
         conn.commit()
 
     except Error as err:
-
         conn.rollback()
         logging.error("Failed to load data: %s", err)
         if err.pgcode:
@@ -143,7 +154,6 @@ def delete_old_data(conn: connection, queries: list[str]) -> None:
     tables in the database that are older than 30 days."""
 
     try:
-
         with conn.cursor() as cur:
             cur.execute("BEGIN;")
             for query in queries:
@@ -151,7 +161,6 @@ def delete_old_data(conn: connection, queries: list[str]) -> None:
             conn.commit()
 
     except Error as err:
-
         conn.rollback()
         logging.error("Failed to delete old data: %s", err)
         if err.pgcode:
@@ -163,56 +172,51 @@ def handler(event: dict = None, context: dict = None) -> dict:
     Adds logic from main into handler to be used in lambda.
     """
 
-    station_queries = [S_DELAYS, S_DELAYS_OVER_5_MIN,
-                       S_AVG_DELAY, S_TOTAL_ARRIVALS, S_TOTAL_CANCELLATIONS]
-    operator_queries = [O_DELAYS, O_DELAYS_OVER_5_MIN,
-                        O_AVG_DELAY, O_TOTAL_ARRIVALS, O_TOTAL_CANCELLATIONS]
-    deletion_queries = [DELETE_OLD_ARRIVAL_DATA, DELETE_OLD_CANCELLATION_DATA]
+    setup_logging()
+    logging.info("Starting the process...")
 
     load_dotenv()
-    conn = get_db_connection(ENV)
 
-    stations_data = clean_data(get_stations_performance(conn, station_queries))
-    operators_data = clean_data(
-        get_operators_performance(conn, operator_queries))
+    try:
 
-    load_to_db(conn, convert_to_list(stations_data),
-               INSERT_STATION_PERFORMANCE)
-    load_to_db(conn, convert_to_list(operators_data),
-               INSERT_OPERATOR_PERFORMANCE)
+        conn = get_db_connection(ENV)
+        logging.info("Connected to the database successful.")
 
-    delete_old_data(conn, deletion_queries)
+        stations_data = get_stations_performance(conn, STATION_QUERIES)
+        operators_data = get_operators_performance(conn, OPERATOR_QUERIES)
 
-    close_connection(conn)
+        if check_keys_exist(stations_data, REQUIRED_KEYS) and check_keys_exist(operators_data, REQUIRED_KEYS):
+            logging.info("Required keys exist in the data.")
 
-    return {
-        "status": "Success!"
-    }
+            stations_data = clean_data(stations_data)
+            operators_data = clean_data(operators_data)
+
+            load_to_db(conn, convert_to_list(stations_data), INSERT_STATION_PERFORMANCE)
+            load_to_db(conn, convert_to_list(operators_data), INSERT_OPERATOR_PERFORMANCE)
+
+            delete_old_data(conn, DELETION_QUERIES)
+            logging.info("Old data deleted successfully.")
+
+            close_connection(conn)
+            logging.info("Connection to the database closed.")
+
+            return {
+                "statusCode": 200,
+                "status": "Success!"
+            }
+
+        close_connection(conn)
+        logging.info("Connection to the database closed.")
+
+        return {
+            "statusCode": 400,
+            "body": "Missing required keys in the data as no data fetched for SQL queries."
+        }
+
+    except Exception as err:
+        logging.error("An error occurred: %s", {str(err)})
+        raise err
 
 
 if __name__ == "__main__":
-    load_dotenv()
-
-    conn = get_db_connection(ENV)
-
-    station_queries = [S_DELAYS, S_DELAYS_OVER_5_MIN,
-                       S_AVG_DELAY, S_TOTAL_ARRIVALS, S_TOTAL_CANCELLATIONS]
-    operator_queries = [O_DELAYS, O_DELAYS_OVER_5_MIN,
-                        O_AVG_DELAY, O_TOTAL_ARRIVALS, O_TOTAL_CANCELLATIONS]
-
-    stations_data = clean_data(get_stations_performance(conn, station_queries))
-    operators_data = clean_data(
-        get_operators_performance(conn, operator_queries))
-
-    stations_data.to_csv("stations_data.csv",  index=False, encoding='utf-8')
-    operators_data.to_csv("operators_data.csv", index=False, encoding='utf-8')
-
-    load_to_db(conn, convert_to_list(stations_data),
-               INSERT_STATION_PERFORMANCE)
-    load_to_db(conn, convert_to_list(operators_data),
-               INSERT_OPERATOR_PERFORMANCE)
-
-    deletion_queries = [DELETE_OLD_ARRIVAL_DATA, DELETE_OLD_CANCELLATION_DATA]
-    delete_old_data(conn, deletion_queries)
-
-    close_connection(conn)
+    pass
