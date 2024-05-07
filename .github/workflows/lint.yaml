@@ -18,30 +18,30 @@ jobs:
       - name: Install pylint
         run: pip install pylint
 
-      - name: Get changes to performance_pipeline
-        id: changed-performance_pipeline
+      - name: Get changes to performance
+        id: changed-performance
         uses: tj-actions/changed-files@v44
         with:
           files: |
-             performance_pipeline/**.py
+             performance/**.py
 
-      - name: Run performance_pipeline linting if files changed
-        if: steps.changed-performance_pipeline.outputs.any_changed == 'true'
+      - name: Run performance linting if files changed
+        if: steps.changed-performance.outputs.any_changed == 'true'
         run: |
-          pip install -r performance_pipeline/requirements.txt
-          pylint performance_pipeline/*.py --ignore-patterns=test_ --fail-under=8.5
+          pip install -r performance/requirements.txt
+          pylint performance/*.py --ignore-patterns=test_ --fail-under=8.5
 
       - name: Get changes to incidents
         id: changed-incidents
         uses: tj-actions/changed-files@v44
         with:
           files: |
-             incidents/**.py
+             alerts/**.py
 
-      - name: Run incidents linting if files changed
-        if: steps.changed-incidents.outputs.any_changed == 'true'
+      - name: Run alerts linting if files changed
+        if: steps.changed-alerts.outputs.any_changed == 'true'
         run: |
-          pip install -r incidents/requirements.txt
-          pylint incidents/*.py --ignore-patterns=test_ --fail-under=8.5
+          pip install -r alerts/requirements.txt
+          pylint alerts/*.py --ignore-patterns=test_ --fail-under=8.5
 
 

@@ -116,7 +116,8 @@ def clean_data(data: pd.DataFrame) -> pd.DataFrame:
     data['delay_5m_count'] = data['delay_5m_count'].fillna(0).astype(int)
     data['avg_delay_min'] = data['avg_delay_min'].fillna(0).astype(int)
     data['arrival_count'] = data['arrival_count'].fillna(0).astype(int)
-    data['cancellation_count'] = data['cancellation_count'].fillna(0).astype(int)
+    data['cancellation_count'] = data['cancellation_count'].fillna(
+        0).astype(int)
 
     return data
 
@@ -148,7 +149,7 @@ def load_to_db(conn: connection, data: list[tuple], query: str) -> None:
             logging.error("Error code: %s", err.pgcode)
 
 
-def delete_old_data(conn: connection, queries: list[str]):
+def delete_old_data(conn: connection, queries: list[str]) -> None:
     """Deletes old data from 'arrivals' and 'cancellations'
     tables in the database that are older than 30 days."""
 

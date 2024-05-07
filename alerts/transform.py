@@ -1,4 +1,4 @@
-"""Functions to transform and clean messages upon receipt"""
+"""Functions to transform and clean messages upon receipt."""
 
 from datetime import datetime
 
@@ -102,7 +102,7 @@ def convert_timestamps(data_frame: pd.DataFrame, timezone: str) -> pd.DataFrame:
     return data_frame
 
 
-def transform_data(message: str, namespaces: dict):
+def transform_data(message: str, namespaces: dict) -> dict:
     """Transforms/cleans each message."""
 
     data = process_xml(message, namespaces)

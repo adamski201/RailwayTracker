@@ -47,7 +47,7 @@ def get_db_connection(config: dict[str, str]) -> connection:
 
 
 def get_values_for_insertion(data: dict) -> tuple:
-    """Returns a tuple of all the data values to be inserted"""
+    """Returns a tuple of all the data values to be inserted."""
 
     return tuple(data[key] for key in KEYS)
 
@@ -80,7 +80,7 @@ def get_operator_id(config: dict[str, str], operator_code: str, operator_name: s
 
 
 def add_operator_id(config: dict[str, str], operator_code: str, operator_name: str) -> int:
-    """Adds operator code and name to database"""
+    """Adds operator code and name to database."""
 
     conn = get_db_connection(config)
     with conn.cursor() as cur:

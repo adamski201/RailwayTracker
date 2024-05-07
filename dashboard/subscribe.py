@@ -1,4 +1,4 @@
-"""SNS functions to allow subscriptions to an SNS topic by email or by sms"""
+"""SNS functions to allow subscriptions to an SNS topic by email or by sms."""
 
 import json
 
@@ -7,14 +7,14 @@ import streamlit as st
 
 
 def convert_operators_to_ui(selected_operators: list, operator_dict: dict) -> list:
-    """Returns unique identifiers for a given operator list"""
+    """Returns unique identifiers for a given operator list."""
 
     return [operator_dict[op] for op in selected_operators]
 
 
 def get_sub_arn_if_exists(sns_client: BaseClient, topic_arn: str,
                           subscription_type: str, value: str) -> str:
-    """Retrieves subscription ARN if subscription is active"""
+    """Retrieves subscription ARN if subscription is active."""
 
     response = sns_client.list_subscriptions_by_topic(TopicArn=topic_arn)
     subscriptions = response.get('Subscriptions', [])
@@ -74,20 +74,20 @@ def subscribe_or_update(sns_client: BaseClient, topic_arn: str, sub_type: str,
 
 
 def get_sub_attributes(sns_client: BaseClient, sub_arn: str) -> dict:
-    """Returns subscription attributes"""
+    """Returns subscription attributes."""
 
     return sns_client.get_subscription_attributes(SubscriptionArn=sub_arn)['Attributes']
 
 
 def get_existing_filter_policy(sns_client: BaseClient, sub_arn: str) -> dict:
-    """Get existing subscription filter policy"""
+    """Get existing subscription filter policy."""
 
     attributes = get_sub_attributes(sns_client, sub_arn)
     return json.loads(attributes.get('FilterPolicy', '{}'))
 
 
 def update_filter_policy(sns_client: BaseClient, selected_operators: list, sub_arn: str) -> None:
-    """Update subscription filter policy"""
+    """Update subscription filter policy."""
 
     existing_filter_policy = get_existing_filter_policy(sns_client, sub_arn)
 
@@ -106,7 +106,7 @@ def update_filter_policy(sns_client: BaseClient, selected_operators: list, sub_a
 
 def on_submit(sns_client: BaseClient, topic_arn: str, selected_operators: list,
               email: str = None, mobile: str = None) -> None:
-    """Checks entered details and subscribes or updates preferences"""
+    """Checks entered details and subscribes or updates preferences."""
 
     if email:
         subscribe_or_update(sns_client, topic_arn, 'email',

@@ -170,6 +170,12 @@ if __name__ == "__main__":
         axis=1,
     )
 
+    incidents = incidents[incidents["Planned?"] == False]
+
+    incidents = incidents[incidents["Cleared?"] == False]
+
+    incidents = incidents.drop(["Planned?", "Cleared?"], axis=1)
+
     st.markdown(
         "<h3 style='text-align: center; color: #F8F8F8;'>Incident Alerts</h3>",
         unsafe_allow_html=True,
