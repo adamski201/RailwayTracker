@@ -6,7 +6,8 @@ from archive import convert_to_list
 
 
 def test_convert_to_list_non_empty_df():
-    """Test case where DataFrame has non-empty data."""
+    """Tests that `convert_to_list` correctly converts a DataFrame 
+    with non-empty data into a list of tuples."""
 
     data = pd.DataFrame({
         'col1': [1, 2, 3],
@@ -20,7 +21,8 @@ def test_convert_to_list_non_empty_df():
 
 
 def test_convert_to_list_mixed_data_types():
-    """Test case where DataFrame has mixed data types."""
+    """Tests that `convert_to_list` handles DataFrame with mixed data types 
+    by converting it into a list of tuples whilst preserving the data types."""
 
     data = pd.DataFrame({
         'col1': [1, 2, 3],
