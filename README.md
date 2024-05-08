@@ -292,6 +292,14 @@ terraform destroy
 
 ![Cloud architecture diagram](https://github.com/adamski201/RailwayTracker/blob/main/images/arch_diagram.png)
 
+### Dashboard Wireframe
+
+![Dashboard Wireframe](https://github.com/adamski201/RailwayTracker/blob/main/images/wireframe.png)
+
+### Dashboard Demo
+
+![Dashboard Demo](https://github.com/adamski201/RailwayTracker/blob/main/images/dashboard_demo.png)
+
 ## Contributors
 
 * [aribasyeda](https://github.com/aribasyeda)
