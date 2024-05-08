@@ -47,7 +47,7 @@ Currently, our data sources include the Real Time Trains API and the National Ra
 - AWS CLI
 - Terraform
 - Realtime Trains API account
-- Rail Data Marketplace account (for National Rail KnowledgeBase incident feed)
+- Rail Data Marketplace account (for the National Rail KnowledgeBase incident feed)
 
 ## Installation & Setup
 
@@ -175,7 +175,7 @@ touch terraform.tfvars
 
 2. Add the necessary variables to the `terraform.tfvars` file in each directory as shown below:
 
-```terraform.tfvars
+```.env
 # Example for alerts/ directory:
 
 HOST=XXXXXXXXXX
@@ -282,15 +282,15 @@ terraform destroy
 
 ### ERD diagram for Short-term Storage (Resides within the Public Schema)
 
-![ERD diagram 1](https://github.com/adamski201/RailwayTracker/blob/readme/images/public_erd.png)
+![ERD diagram 1](https://github.com/adamski201/RailwayTracker/blob/main/images/public_erd.png)
 
 ### ERD diagram for Long-term Storage (Resides within the Archive Schema)
 
-![ERD diagram 2](https://github.com/adamski201/RailwayTracker/blob/readme/images/archive_erd.png)
+![ERD diagram 2](https://github.com/adamski201/RailwayTracker/blob/main/images/archive_erd.png)
 
 ### Cloud architecture diagram
 
-![Cloud architecture diagram](https://github.com/adamski201/RailwayTracker/blob/readme/images/architecture_diagram_revision.png)
+![Cloud architecture diagram](https://github.com/adamski201/RailwayTracker/blob/main/images/arch_diagram.png)
 
 ## Contributors
 
