@@ -280,15 +280,15 @@ terraform destroy
 
 ## Documentation
 
-### ERD diagram for Short-term Storage (Resides within the Public Schema)
+### ERD Diagram for Short-term Storage (Resides within the Public Schema)
 
 ![ERD diagram 1](https://github.com/adamski201/RailwayTracker/blob/main/images/public_erd.png)
 
-### ERD diagram for Long-term Storage (Resides within the Archive Schema)
+### ERD Diagram for Long-term Storage (Resides within the Archive Schema)
 
 ![ERD diagram 2](https://github.com/adamski201/RailwayTracker/blob/main/images/archive_erd.png)
 
-### Cloud architecture diagram
+### Cloud Architecture Diagram
 
 ![Cloud architecture diagram](https://github.com/adamski201/RailwayTracker/blob/main/images/arch_diagram.png)
 
