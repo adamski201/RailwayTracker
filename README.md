@@ -4,7 +4,7 @@
 
 RailWatch comprises a set of related services for the analysis and monitoring of UK railway stations and rail operators.
 
-Our website can be found [here](http://18.133.189.84:8501/).
+![Dashboard Demo](https://github.com/adamski201/RailwayTracker/blob/main/images/dashboard_demo_2.png)
 
 The website contains:
 
@@ -298,7 +298,7 @@ terraform destroy
 
 ### Dashboard Demo
 
-![Dashboard Demo](https://github.com/adamski201/RailwayTracker/blob/main/images/dashboard_demo.png)
+![Dashboard Demo](https://github.com/adamski201/RailwayTracker/blob/main/images/dashboard_demo_2.png)
 
 ## Contributors
 
